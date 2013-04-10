@@ -38,11 +38,11 @@ def streamming(fd):
 def topbottomWallsBBNS_BC(fd):
     """Bounceback no-slip boundary conditions for top and bottom walls"""
     #up down, directions 2-4
-    fd[4][0],fd[2][-1] = fd[2][-1], fd[4][0]
+    fd[4][0],fd[2][-1] = np.copy(fd[2][-1]), np.copy(fd[4][0])
     #diagonal 5-7
-    fd[7][0],fd[5][-1] = np.roll( fd[5][-1],-1 ), np.roll(fd[7][0],1)
+    fd[7][0],fd[5][-1] = np.copy(np.roll( fd[5][-1],-1 )), np.copy(np.roll(fd[7][0],1))
     #diagonal 6-8
-    fd[8][0], fd[6][-1] = np.roll( fd[6][-1],1 ),  np.roll(fd[8][0],-1)
+    fd[8][0], fd[6][-1] =np.copy(np.roll( fd[6][-1],1 )),  np.copy(np.roll(fd[8][0],-1))
 
 def collision(ux,uy,rho,fd,tau):
     """Modify distribution funtions according to collision term"""
@@ -58,17 +58,16 @@ def init(LatticeSize,U,r):
     rho = r*np.ones(LatticeSize)
     return eqdistributions(ux,uy,rho)
 
-
 #Common operations
 def eqmacroVariables(fd,F=[0.,0.]):
     """Returns the macroscopic variables density and velocity.(rho, ux,uy)
        Equilibrium velocity includes forcing"""
-    rho = sum(fd)
+    rho = fd[0]+fd[1]+fd[2]+fd[3]+fd[4]+fd[5]+fd[6]+fd[7]+fd[8]
     ux  = (fd[1]-fd[3] + (fd[5]-fd[6]) + (fd[8]-fd[7]))/rho
     uy  = (fd[2]-fd[4] + (fd[5]+fd[6]) - (fd[8]+fd[7]))/rho
     #Additional forcing
-#    ux  += 0.5*F[0]/rho
-#    uy  += 0.5*F[1]/rho
+    ux  += 0.5*F[0]/rho
+    uy  += 0.5*F[1]/rho
     return ux,uy,rho
 
 def velocities(ux,uy):
@@ -76,23 +75,16 @@ def velocities(ux,uy):
     uy2 =uy**2
     u2  =ux2+uy2
     return ux2,uy2,u2
-    
-def preasuredrop(tau,endVel,rho,fd):
-    """Preasure drop as implemented by Succi"""
-    nu=(tau-0.5)/3.0
-    F =8*nu*endVel*rho/(6.0*len(rho)**2)
-    fd[[1,5,8]]+=F
-    fd[[3,6,7]]-=F
 
 def force(ux,uy,rho,fd,tau,F):
     """Adds microscopic forcing term"""
-    cf = (1-0.5*tau)*3.0
+    cf = (1-0.5/tau)*3.0
 
     F0 = 4.0/9.0  *(   -ux*F[0]  -    uy *F[1] )
     F1 = 1.0/9.0  *( (1-ux)*F[0] -    uy *F[1] + 3*ux*F[0] )
     F2 = 1.0/9.0  *(   -ux *F[0] + (1-uy)*F[1] + 3*uy*F[1] )
-    F3 = 1.0/9.0  *((-1-ux)*F[0] -    uy *F[1] - 3*ux*F[0] )
-    F4 = 1.0/9.0  *(   -ux *F[0] +(-1-uy)*F[1] - 3*uy*F[1] )
+    F3 = 1.0/9.0  *((-1-ux)*F[0] -    uy *F[1] + 3*ux*F[0] )
+    F4 = 1.0/9.0  *(   -ux *F[0] +(-1-uy)*F[1] + 3*uy*F[1] )
 
     F5 = 1.0/36.0 *( (1-ux)*F[0] + (1-uy)*F[1] + 3*( ux+uy)*( F[0]+F[1]) )
     F6 = 1.0/36.0 *((-1-ux)*F[0] + (1-uy)*F[1] + 3*(-ux+uy)*(-F[0]+F[1]) )
