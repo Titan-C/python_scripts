@@ -35,20 +35,20 @@ def streamming(fd):
     fd[7] = np.roll( np.roll(fd[7], 1,axis=0) ,-1,axis=1) #y v,x <
     fd[8] = np.roll( np.roll(fd[8], 1,axis=0) , 1,axis=1) #y v,x >
 
-def topbottomWalls(fd):
+def topbottomWallsBBNS_BC(fd):
     """Bounceback no-slip boundary conditions for top and bottom walls"""
     #up down, directions 2-4
     fd[4][0],fd[2][-1] = fd[2][-1], fd[4][0]
-#    #diagonal 5-7
+    #diagonal 5-7
     fd[7][0],fd[5][-1] = np.roll( fd[5][-1],-1 ), np.roll(fd[7][0],1)
-#    #diagonal 6-8
+    #diagonal 6-8
     fd[8][0], fd[6][-1] = np.roll( fd[6][-1],1 ),  np.roll(fd[8][0],-1)
 
 def collision(ux,uy,rho,fd,tau):
+    """Modify distribution funtions according to collision term"""
     feq = eqdistributions(ux,uy,rho)
     for a in range(len(feq)):
         fd[a] -=  1.0/tau*(fd[a] - feq[a])
-
 
 def init(LatticeSize,U,r):
     """Unitiate dicrete distribution functions for a given LatticeSize
@@ -58,12 +58,17 @@ def init(LatticeSize,U,r):
     rho = r*np.ones(LatticeSize)
     return eqdistributions(ux,uy,rho)
 
+
 #Common operations
-def macroVariables(fd):
-    """Returns the macroscopic variables density and velocity.(rho, ux,uy)"""
+def eqmacroVariables(fd,F=[0.,0.]):
+    """Returns the macroscopic variables density and velocity.(rho, ux,uy)
+       Equilibrium velocity includes forcing"""
     rho = sum(fd)
     ux  = (fd[1]-fd[3] + (fd[5]-fd[6]) + (fd[8]-fd[7]))/rho
     uy  = (fd[2]-fd[4] + (fd[5]+fd[6]) - (fd[8]+fd[7]))/rho
+    #Additional forcing
+#    ux  += 0.5*F[0]/rho
+#    uy  += 0.5*F[1]/rho
     return ux,uy,rho
 
 def velocities(ux,uy):
@@ -78,3 +83,20 @@ def preasuredrop(tau,endVel,rho,fd):
     F =8*nu*endVel*rho/(6.0*len(rho)**2)
     fd[[1,5,8]]+=F
     fd[[3,6,7]]-=F
+
+def force(ux,uy,rho,fd,tau,F):
+    """Adds microscopic forcing term"""
+    cf = (1-0.5*tau)*3.0
+
+    F0 = 4.0/9.0  *(   -ux*F[0]  -    uy *F[1] )
+    F1 = 1.0/9.0  *( (1-ux)*F[0] -    uy *F[1] + 3*ux*F[0] )
+    F2 = 1.0/9.0  *(   -ux *F[0] + (1-uy)*F[1] + 3*uy*F[1] )
+    F3 = 1.0/9.0  *((-1-ux)*F[0] -    uy *F[1] - 3*ux*F[0] )
+    F4 = 1.0/9.0  *(   -ux *F[0] +(-1-uy)*F[1] - 3*uy*F[1] )
+
+    F5 = 1.0/36.0 *( (1-ux)*F[0] + (1-uy)*F[1] + 3*( ux+uy)*( F[0]+F[1]) )
+    F6 = 1.0/36.0 *((-1-ux)*F[0] + (1-uy)*F[1] + 3*(-ux+uy)*(-F[0]+F[1]) )
+    F7 = 1.0/36.0 *((-1-ux)*F[0] +(-1-uy)*F[1] + 3*(-ux-uy)*(-F[0]-F[1]) )
+    F8 = 1.0/36.0 *( (1-ux)*F[0] +(-1-uy)*F[1] + 3*( ux-uy)*( F[0]-F[1]) )
+
+    fd+= cf*np.array([F0,F1,F2,F3,F4,F5,F6,F7,F8])
