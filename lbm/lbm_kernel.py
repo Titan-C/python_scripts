@@ -38,11 +38,21 @@ def streamming(fd):
 def topbottomWallsBBNS_BC(fd):
     """Bounceback no-slip boundary conditions for top and bottom walls"""
     #up down, directions 2-4
-    fd[4][0],fd[2][-1] = np.copy(fd[2][-1]), np.copy(fd[4][0])
+    fd[4,0],fd[2,-1] = np.copy(fd[2,-1]), np.copy(fd[4,0])
     #diagonal 5-7
-    fd[7][0],fd[5][-1] = np.copy(np.roll( fd[5][-1],-1 )), np.copy(np.roll(fd[7][0],1))
+    fd[7,0],fd[5,-1] = np.copy(np.roll( fd[5,-1],-1 )), np.copy(np.roll(fd[7,0],1))
     #diagonal 6-8
-    fd[8][0], fd[6][-1] =np.copy(np.roll( fd[6][-1],1 )),  np.copy(np.roll(fd[8][0],-1))
+    fd[8,0], fd[6,-1] =np.copy(np.roll( fd[6,-1],1 )),  np.copy(np.roll(fd[8,0],-1))
+
+def lr_sideWallsBBNS_BC(fd):
+    """Bounceback no-slip boundary conditions for left - right walls"""
+    #up down, directions 2-4
+    fd[3,:,-1],fd[1,:,0] = np.copy(fd[1,:,0]), np.copy(fd[3,:,-1])
+    #diagonal 5-7
+    fd[7,:,-1],fd[5,:,0] = np.copy(np.roll( fd[5,:,0],1 )), np.copy(np.roll(fd[7,:,-1],-1))
+    #diagonal 6-8
+    fd[8,:,0], fd[6,:,-1] =np.copy(np.roll( fd[6,:,-1],1 )),  np.copy(np.roll(fd[8,:,0],-1))
+
 
 def collision(ux,uy,rho,fd,tau):
     """Modify distribution funtions according to collision term"""
