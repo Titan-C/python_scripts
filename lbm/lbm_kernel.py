@@ -60,14 +60,6 @@ def collision(ux,uy,rho,fd,tau):
     for a in range(len(feq)):
         fd[a] -=  1.0/tau*(fd[a] - feq[a])
 
-def init(LatticeSize,U,r):
-    """Unitiate dicrete distribution functions for a given LatticeSize
-       and velocity"""
-    ux  = U[0]*np.ones(LatticeSize)
-    uy  = U[1]*np.ones(LatticeSize)
-    rho = r*np.ones(LatticeSize)
-    return eqdistributions(ux,uy,rho)
-
 #Common operations
 def eqmacroVariables(fd,F=[0.,0.]):
     """Returns the macroscopic variables density and velocity.(rho, ux,uy)
