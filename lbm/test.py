@@ -4,9 +4,8 @@ Test over 2D LBM
 """
 import lbm_kernel as lb
 import numpy as np
-from pylab import quiver,show,plot
 #intial conditions
-size=[64,64]
+size=[32,32]
 tau =1
 r=1
 F=[1e-6,0]
@@ -56,30 +55,26 @@ def conservationTBWalls():
     """ Test if on top & bottom walls density is conserved"""
     U = [0.1,0.]
     fd = init(size,U,r)
-    for step in range(3000):
+    for step in range(300):
         ux,uy,rho = lb.eqmacroVariables(fd)
         lb.collision(ux,uy,rho,fd,tau)
         lb.streamming(fd)
         lb.topbottomWallsBBNS_BC(fd)
     ux,uy,rho = lb.eqmacroVariables(fd)
     assert ( np.abs(rho - r) < 1e-12 ).all()
-    plot(ux[:,10])
-    show()
     print 'Conservation of density on periodic Flow restrained by upper and lower walls: [OK]'
 
 def conservationLRWalls():
     """ Test if on top & bottom walls density is conserved"""
     U = [0.,0.1]
     fd = init(size,U,r)
-    for step in range(3000):
+    for step in range(300):
         ux,uy,rho = lb.eqmacroVariables(fd)
         lb.collision(ux,uy,rho,fd,tau)
         lb.streamming(fd)
         lb.lr_sideWallsBBNS_BC(fd)
     ux,uy,rho = lb.eqmacroVariables(fd)
     assert ( np.abs(rho - r) < 1e-12 ).all()
-    plot(uy[10])
-    show()
     print 'Conservation of density on periodic Flow restrained by left & right walls: [OK]'
 
 def conservationTBWallsforced():
@@ -87,7 +82,7 @@ def conservationTBWallsforced():
     for i in range(1):
         U = [0.1,0.1*i]
         fd = init(size,U,r)
-        for step in range(3000):
+        for step in range(300):
             ux,uy,rho = lb.eqmacroVariables(fd,F)
             lb.collision(ux,uy,rho,fd,tau)
             lb.force(ux,uy,rho,fd,tau,F)
@@ -95,9 +90,6 @@ def conservationTBWallsforced():
             lb.topbottomWallsBBNS_BC(fd)
         ux,uy,rho = lb.eqmacroVariables(fd)
         assert ( np.abs(rho - r) < 1e-12 ).all()
-        plot(ux[:,10])
-        show()
-        
         print 'Conservation of density on forced periodic Flow and Upper and lower walls: [OK]'
 
 
