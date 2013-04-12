@@ -6,6 +6,7 @@ Fluid Flow inside periodic slit with external force field
 """
 
 import numpy as np
+import numpy.ma as ma
 
 def eqdistributions(ux,uy,rho):
     """Evaluate Equilibrium distribution functions"""
@@ -46,6 +47,7 @@ def eqmacroVariables(fd,F=[0.,0.]):
     """Returns the macroscopic variables density and velocity.(rho, ux,uy)
        Equilibrium velocity includes forcing"""
     rho = fd[0]+fd[1]+fd[2]+fd[3]+fd[4]+fd[5]+fd[6]+fd[7]+fd[8]
+    rho[rho<1e-12]=1e-12
     ux  = (fd[1]-fd[3] + (fd[5]-fd[6]) + (fd[8]-fd[7]))/rho
     uy  = (fd[2]-fd[4] + (fd[5]+fd[6]) - (fd[8]+fd[7]))/rho
     #Additional forcing
@@ -77,7 +79,21 @@ def force(ux,uy,rho,fd,tau,F):
     fd+= cf*np.array([F0,F1,F2,F3,F4,F5,F6,F7,F8])
 
 ##boundaries handling
+def setTBboundaries(fd):
+    fd[:,[0,-1]]=0
 
+def bufferTBwall(fd):
+    """Bounceback no-slip boundary conditions for top and bottom walls"""
+    #up down, directions 2-4
+    fd[4,1],fd[2,-2] = np.copy(fd[2,0]), np.copy(fd[4,-1])
+    fd[[2,4],[0,-1]] = 0
+    #diagonal 5-7
+    fd[7,1],fd[5,-2]= np.copy(np.roll(fd[5,0],-1)), np.copy(np.roll(fd[7,-1],1))
+    fd[[5,7],[0,-1]] = 0
+    #diagonal 6-8
+    fd[8,1],fd[6,-2]= np.copy(np.roll(fd[6,0],1)), np.copy(np.roll(fd[8,-1],-1))
+    fd[[6,8],[0,-1]] = 0
+    
 def topbottomWallsBBNS_BC(fd):
     """Bounceback no-slip boundary conditions for top and bottom walls"""
     #up down, directions 2-4
