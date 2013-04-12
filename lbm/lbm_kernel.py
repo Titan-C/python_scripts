@@ -43,9 +43,9 @@ def topbottomWallsBBNS_BC(fd):
     fd[7,0],fd[5,-1]= np.copy(np.roll( fd[5,-1],-1)), np.copy(np.roll(fd[7,0],1))
     #diagonal 6-8
     fd[8,0],fd[6,-1]= np.copy(np.roll( fd[6,-1],1 )), np.copy(np.roll(fd[8,0],-1))
-    #no slip 1-3
-    fd[3,0],fd[1,0] = np.copy(np.roll( fd[1,0],-1 )), np.copy(np.roll(fd[3,0],1))
-    fd[3,-1],fd[1,-1]=np.copy(np.roll( fd[1,-1],-1 )),np.copy(np.roll(fd[3,-1],1))
+#    #no slip 1-3
+#    fd[3,0],fd[1,0] = np.copy(np.roll( fd[1,0],-1 )), np.copy(np.roll(fd[3,0],1))
+#    fd[3,-1],fd[1,-1]=np.copy(np.roll( fd[1,-1],-1 )),np.copy(np.roll(fd[3,-1],1))
 
 def lr_sideWallsBBNS_BC(fd):
     """Bounceback no-slip boundary conditions for left - right walls"""
