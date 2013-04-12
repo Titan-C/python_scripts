@@ -6,19 +6,18 @@ Poiseuille Flow 2D
 import argparse
 import lbm_kernel as lb
 import numpy as np
-from pylab import quiver,show,plot
-from scipy.optimize import curve_fit
+from pylab import show,plot
 
 #Input parsing
 parser = argparse.ArgumentParser(description='LBM flow in slit')
 parser.add_argument('-s','--size', metavar='n', type=int,
-                    nargs=2, default=[33,32], help='Domain size')
+                    nargs=2, default=[33,33], help='Domain size')
 parser.add_argument('-F','--force',metavar='U',type=float,
                     nargs=2, default=[1e-6,0.], help='External force field')
 parser.add_argument('-U','--velocity',metavar='U',type=float,
                     nargs=2, default=[0.,0.], help='Magnitude of desired final longitudinal macroscopic velocity')
 parser.add_argument('-t','--tau',metavar='t',type=float,
-                    nargs=1, default=1.2, help='Relaxation time')
+                    nargs=1, default=[1.1], help='Relaxation time')
 parser.add_argument('-T','--test')
 
 
@@ -45,8 +44,8 @@ def main(args):
     uxold=1
     step = 1
     while ( np.abs(uxold - ux) > 1e-14 ).all():
-        lb.collision(ux,uy,rho,fd,args.tau)
-        lb.force(ux,uy,rho,fd,args.tau,args.force)
+        lb.collision(ux,uy,rho,fd,args.tau[0])
+        lb.force(ux,uy,rho,fd,args.tau[0],args.force)
         lb.streamming(fd)
         lb.topbottomWallsBBNS_BC(fd)
         uxold=ux
@@ -57,16 +56,12 @@ def main(args):
     
     ux,uy,rho = lb.eqmacroVariables(fd)
     domain = np.arange(len(ux[:,10]))- size[0]/2
-    popt, pcov = curve_fit(U_sol,domain , ux[:,10])
-    print ux[:,10],popt
-    U=U_sol(domain,popt[0],popt[1])
-    print domain,U
-    print 'diff num - fit: ', np.abs(ux[:,10]-U)
+    print ux[:,10]
     an= anSolution(args.force[0],size[0],args.tau)
     print an
     print 'diff num - analytic: ', np.abs(ux[:,10]-an)
-    plot(domain,ux[:,10])
-    plot(domain,U)
+    plot(domain,ux[:,10],'x-')
+    plot(domain,an)
     show()
     
     return ux
