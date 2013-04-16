@@ -83,7 +83,7 @@ def setWalls(fd,walls):
 
 def onWallBBNS_BC(fd,walls):
     """Bounceback no-slip boundary conditions for arbitrary walls"""
-    Nx,Ny=walls.shape
+    Ny,Nx=walls.shape
     solid=np.array(np.where(walls==1))
     #generate direction vectors, mantain periodic boundary conditions
     goright=solid[1]+1
