@@ -21,17 +21,16 @@ parser.add_argument('-t','--tau',metavar='t',type=float,
 parser.add_argument('-T','--test')
 
 
-def U_sol(x,U,L):
-    return U*(1-(x/L)**2)
 
 def ev_nu(tau): return (tau-0.5)/3.
 def ev_U(F,L,nu): return 0.5*F * (L/2.)**2/nu
+def U_sol(x,U,L): return U*(1-(2.*x/L)**2)
 
 def anSolution(F,L,tau):
     nu = ev_nu(tau)
-    U0=ev_U(F,L,nu)
-    y=np.arange(L)-L/2.
-    return y,U0*(1-(2.*y/L)**2)
+    U0=ev_U(F,L-2,nu)
+    y=np.arange(L)-L/2
+    return U_sol(y,U0,L-2)
 
 def main(args):
     size = args.size
@@ -42,25 +41,28 @@ def main(args):
     fd = lb.eqdistributions(ux,uy,rho)
     uxold=1
     step = 1
-    while ( np.abs(uxold - ux) > 1e-10 ).all():
+    wall=np.zeros(size)
+    wall[[0,-1]]=1
+    lb.setWalls(fd,wall)
+    ux,uy,rho = lb.eqmacroVariables(fd,[0.,0.])
+    while ( np.abs(uxold - ux) > 1e-10 )[wall==0].all():
         lb.collision(ux,uy,rho,fd,args.tau[0])
         lb.force(ux,uy,rho,fd,args.tau[0],args.force)
         lb.streamming(fd)
-        lb.topbottomWallsBBNS_BC(fd)
+        lb.onWallBBNS_BC(fd,wall)
         uxold=ux
         ux,uy,rho = lb.eqmacroVariables(fd,args.force)
         step +=1
     print step, 'iter'
             
-    
-    ux,uy,rho = lb.eqmacroVariables(fd)
-    domain = np.arange(len(ux[:,3]))- size[0]/2
-    print ux[:,3]
-    y,U= anSolution(args.force[0],size[0],args.tau[0])
-    print U
-    print 'diff num - analytic: ', np.abs(ux[:,3]-U)
-    plot(domain,ux[:,3],'x-')
-    plot(y,U)
+    ux,uy,rho = lb.eqmacroVariables(fd,args.force)
+    domain = np.arange(len(ux[:,1]))- size[0]/2
+    print ux[:,1]
+    an= anSolution(args.force[0],size[0],args.tau[0])
+    print an
+    print 'diff num - analytic: ', np.abs(ux[:,1]-an)
+    plot(domain,ux[:,1],'x-')
+    plot(domain,an)
     show()
     
     return ux

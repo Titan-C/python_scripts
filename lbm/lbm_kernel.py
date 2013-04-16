@@ -35,39 +35,17 @@ def streamming(fd):
     fd[7] = np.roll( np.roll(fd[7], 1,axis=0) ,-1,axis=1) #y v,x <
     fd[8] = np.roll( np.roll(fd[8], 1,axis=0) , 1,axis=1) #y v,x >
 
-def topbottomWallsBBNS_BC(fd):
-    """Bounceback no-slip boundary conditions for top and bottom walls"""
-    #up down, directions 2-4
-    fd[4,0],fd[2,-1]= np.copy(fd[2,-1]), np.copy(fd[4,0])
-    #diagonal 5-7
-    fd[7,0],fd[5,-1]= np.copy(np.roll( fd[5,-1],-1)), np.copy(np.roll(fd[7,0],1))
-    #diagonal 6-8
-    fd[8,0],fd[6,-1]= np.copy(np.roll( fd[6,-1],1 )), np.copy(np.roll(fd[8,0],-1))
-#    #no slip 1-3
-#    fd[3,0],fd[1,0] = np.copy(np.roll( fd[1,0],-1 )), np.copy(np.roll(fd[3,0],1))
-#    fd[3,-1],fd[1,-1]=np.copy(np.roll( fd[1,-1],-1 )),np.copy(np.roll(fd[3,-1],1))
-
-def lr_sideWallsBBNS_BC(fd):
-    """Bounceback no-slip boundary conditions for left - right walls"""
-    #up down, directions 2-4
-    fd[3,:,-1],fd[1,:,0] = np.copy(fd[1,:,0]), np.copy(fd[3,:,-1])
-    #diagonal 5-7
-    fd[7,:,-1],fd[5,:,0] = np.copy(np.roll( fd[5,:,0],1 )), np.copy(np.roll(fd[7,:,-1],-1))
-    #diagonal 6-8
-    fd[8,:,0], fd[6,:,-1] =np.copy(np.roll( fd[6,:,-1],1 )),  np.copy(np.roll(fd[8,:,0],-1))
-
-
 def collision(ux,uy,rho,fd,tau):
     """Modify distribution funtions according to collision term"""
     feq = eqdistributions(ux,uy,rho)
-    for a in range(len(feq)):
-        fd[a] -=  1.0/tau*(fd[a] - feq[a])
+    fd -=  1.0/tau*(fd - feq)
 
 #Common operations
 def eqmacroVariables(fd,F=[0.,0.]):
     """Returns the macroscopic variables density and velocity.(rho, ux,uy)
        Equilibrium velocity includes forcing"""
     rho = fd[0]+fd[1]+fd[2]+fd[3]+fd[4]+fd[5]+fd[6]+fd[7]+fd[8]
+    rho[rho<1e-13]=1
     ux  = (fd[1]-fd[3] + (fd[5]-fd[6]) + (fd[8]-fd[7]))/rho
     uy  = (fd[2]-fd[4] + (fd[5]+fd[6]) - (fd[8]+fd[7]))/rho
     #Additional forcing
@@ -97,3 +75,37 @@ def force(ux,uy,rho,fd,tau,F):
     F8 = 1.0/36.0 *( (1-ux)*F[0] +(-1-uy)*F[1] + 3*( ux-uy)*( F[0]-F[1]) )
 
     fd+= cf*np.array([F0,F1,F2,F3,F4,F5,F6,F7,F8])
+
+##boundaries handling
+def setWalls(fd,walls):
+    """Anulates fd where a wall(solid) is declared"""
+    fd[:,walls==1]=0
+
+def onWallBBNS_BC(fd,walls):
+    """Bounceback no-slip boundary conditions for arbitrary walls"""
+    Ny,Nx=walls.shape
+    solid=np.array(np.where(walls==1))
+    #generate direction vectors, mantain periodic boundary conditions
+    goright=solid[1]+1
+    goright[goright==Nx]=0
+    goleft=solid[1]-1
+    goleft[goleft==-1]+=Nx
+    goup=solid[0]-1
+    goup[goup==-1]+=Ny
+    godown=solid[0]+1
+    godown[godown==Ny]=0
+    #colision to right,left, direction 1-3
+    fd[1,solid[0],goright] = fd[3,solid[0],solid[1]]
+    fd[3,solid[0],goleft] = fd[1,solid[0],solid[1]]
+    #colision top,botto direction 2-4
+    fd[2,goup,solid[1]] = fd[4,solid[0],solid[1]]
+    fd[4,godown,solid[1]] = fd[2,solid[0],solid[1]]
+    #diagonal 5-7
+    fd[5,goup,goright] = fd[7,solid[0],solid[1]]
+    fd[7,godown,goleft] = fd[5,solid[0],solid[1]]
+    #diagonal 6-8
+    fd[6,goup,goleft] = fd[8,solid[0],solid[1]]
+    fd[8,godown,goright] = fd[6,solid[0],solid[1]]
+    
+    #clean solid
+    fd[:,solid[0],solid[1]]=0
