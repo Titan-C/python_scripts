@@ -6,7 +6,6 @@ Fluid Flow inside periodic slit with external force field
 """
 
 import numpy as np
-import numpy.ma as ma
 
 def eqdistributions(ux,uy,rho):
     """Evaluate Equilibrium distribution functions"""
@@ -39,15 +38,14 @@ def streamming(fd):
 def collision(ux,uy,rho,fd,tau):
     """Modify distribution funtions according to collision term"""
     feq = eqdistributions(ux,uy,rho)
-    for a in range(len(feq)):
-        fd[a] -=  1.0/tau*(fd[a] - feq[a])
+    fd -=  1.0/tau*(fd - feq)
 
 #Common operations
 def eqmacroVariables(fd,F=[0.,0.]):
     """Returns the macroscopic variables density and velocity.(rho, ux,uy)
        Equilibrium velocity includes forcing"""
     rho = fd[0]+fd[1]+fd[2]+fd[3]+fd[4]+fd[5]+fd[6]+fd[7]+fd[8]
-    rho[rho<1e-12]=1e-12
+    rho[rho<1e-13]=1
     ux  = (fd[1]-fd[3] + (fd[5]-fd[6]) + (fd[8]-fd[7]))/rho
     uy  = (fd[2]-fd[4] + (fd[5]+fd[6]) - (fd[8]+fd[7]))/rho
     #Additional forcing
