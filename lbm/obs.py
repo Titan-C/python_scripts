@@ -14,9 +14,9 @@ parser = argparse.ArgumentParser(description='LBM flow in slit')
 parser.add_argument('-d','--diameter', metavar='D', type=int,
                     nargs=2, default=[30], help='Diameter of disk obstacle')
 parser.add_argument('-F','--force',metavar='F',type=float,
-                    nargs=2, default=[3e-5,0.], help='External force field')
+                    nargs=2, default=[4e-5,0.], help='External force field')
 parser.add_argument('-t','--tau',metavar='t',type=float,
-                    nargs=1, default=[0.8], help='Relaxation time')
+                    nargs=1, default=[0.65], help='Relaxation time')
 parser.add_argument('-T','--test')
 
 def createobstacle(d):
@@ -33,7 +33,8 @@ def createobstacle(d):
 
 def main(args):
     fig = plt.figure()
-    ax = fig.add_subplot(111)
+    axU = fig.add_subplot(211)
+    axR = fig.add_subplot(212)
 
     wall = createobstacle(args.diameter[0])
     ux  = np.zeros(wall.shape)
@@ -43,21 +44,27 @@ def main(args):
     rho = np.ones(wall.shape)
     fd = lb.eqdistributions(ux,uy,rho)
     lb.setWalls(fd,wall)
-    for i in range(7000):
+    for i in range(100000):
         
         ux,uy,rho = lb.eqmacroVariables(fd,args.force)
         ux[:,0]=an
-        ax.cla()
-        ax.imshow(np.sqrt(ux**2+uy**2))
-        fname = '_tmp%05d.png'%i
-        fig.savefig(fname)
+        if i%30 == 0:
+            axU.cla()
+            axU.imshow(np.sqrt(ux**2+uy**2))
+            fname = '%05d.png'%i
+            dyUy,dxUy=np.gradient(uy)
+            dyUx,dxUx=np.gradient(ux)
+            vort=np.abs(dxUy-dyUx)
+            axR.cla()
+            axR.imshow(vort)
+            fig.savefig('tot'+fname)
         
         lb.collision(ux,uy,rho,fd,args.tau[0])
         lb.force(ux,uy,rho,fd,args.tau[0],args.force)
         lb.streamming(fd)
         fd[:,:,-1]=np.copy(fd[:,:,-2]) #gradient to cero on outlet
         lb.onWallBBNS_BC(fd,wall)
-    ux,uy,rho = lb.eqmacroVariables(fd,args.force)
+    return lb.eqmacroVariables(fd,args.force)
         
 if __name__ == "__main__":
     args=parser.parse_args()
