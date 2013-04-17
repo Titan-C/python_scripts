@@ -32,6 +32,11 @@ def anSolution(F,L,tau):
     y=np.arange(L)-L/2
     return U_sol(y,U0,L-2)
 
+def reynolds(F,L,D,tau):
+    u=ev_U(F,L,ev_nu(tau))
+    re=u*2/3.*D/ev_nu(tau)
+    return u,re
+
 def main(args):
     size = args.size
     U = args.velocity
