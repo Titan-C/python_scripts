@@ -8,7 +8,7 @@ import numpy as np
 
 #intial conditions
 size=[21,3]
-tau =0.505
+tau =0.503
 r=1
 F=[1e-6,0]
 
@@ -64,13 +64,14 @@ def reynolds(F,L,D,nu):
     return u,re
     
 def test_poiseuille():
-    lat = lb_D2Q9.lattice(size,[0.,0.],0.503)
+    """Test poiseuille Flow"""
+    lat = lb_D2Q9.lattice(size,[0.,0.],tau)
     uxold=1
     step = 1
     wall=np.zeros(size)
     wall[[0,-1]]=1
     lat.setWalls(wall)
-    while ( np.abs(uxold - lat.ux) > 1e-14 )[wall==0].all():
+    while ( np.abs(uxold - lat.ux) > 1e-10 )[wall==0].all():
        lat.collision()
        lat.force(F)
        lat.streamming()
@@ -84,4 +85,4 @@ def test_poiseuille():
     print an
     print 'diff num - analytic: ', np.abs(lat.ux[:,1]-an)
     
-    assert ( np.abs(lat.ux[:,1]-an) < 1e-5 )[1:-1].all()
+    assert ( np.abs(lat.ux[:,1]-an) < 3e-4 )[1:-1].all()
