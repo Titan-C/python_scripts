@@ -44,13 +44,13 @@ def main(args):
     rho = np.ones(wall.shape)
     fd = lb.eqdistributions(ux,uy,rho)
     lb.setWalls(fd,wall)
-    for i in range(100000):
+    for i in range(1000):
         ux,uy,rho = lb.eqmacroVariables(fd,args.force)
         ux[:,0]=an
         if i%30 == 0:
             axU.cla()
             axU.imshow(np.sqrt(ux**2+uy**2))
-            fname = '%05d.png'%i
+            fname = '%08d.png'%i
             dyUy,dxUy=np.gradient(uy)
             dyUx,dxUx=np.gradient(ux)
             vort=np.abs(dxUy-dyUx)
@@ -64,7 +64,8 @@ def main(args):
         fd[:,:,-1]=np.copy(fd[:,:,-2]) #gradient to cero on outlet
         lb.onWallBBNS_BC(fd,wall)
     ux,uy,rho = lb.eqmacroVariables(fd,args.force)
-    np.savez('out.npz',ux,uy,rho,wall,an)    
+    np.savez('out.npz',ux,uy,rho,wall,an)
+
 if __name__ == "__main__":
     args=parser.parse_args()
     main(args)

@@ -1,2 +1,2 @@
 clean:
-	rm -f *pyc *png
+	rm -f *pyc *png out*
