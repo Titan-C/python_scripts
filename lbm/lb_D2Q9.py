@@ -8,11 +8,11 @@ Lattice Boltzmann 2D en D2Q9 class
 import numpy as np
 
 class lattice:
-    def __init__(self,LatticeSize,tau,r=1):
+    def __init__(self,LatticeSize,U,tau,r=1):
         """Unitiate dicrete distribution functions for a given LatticeSize
            and velocity"""
-        self.ux  = np.zeros(LatticeSize)
-        self.uy  = np.zeros(LatticeSize)
+        self.ux  = U[0]*np.ones(LatticeSize)
+        self.uy  = U[1]*np.ones(LatticeSize)
         self.rho = r*np.ones(LatticeSize)
         self.fd  = self.eqdistributions()
         self.tau = tau
