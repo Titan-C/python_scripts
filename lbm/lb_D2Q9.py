@@ -47,7 +47,7 @@ class lattice:
            Equilibrium velocity includes forcing"""
         fd= self.fd
         
-        self.rho = fd[0]+fd[1]+fd[2]+fd[3]+fd[4]+fd[5]+fd[6]+fd[7]+fd[8]
+        self.rho = np.sum(fd,axis=0)
         self.rho[self.rho<1e-13]=1
         self.ux  = (fd[1]-fd[3] + (fd[5]-fd[6]) + (fd[8]-fd[7]))/self.rho
         self.uy  = (fd[2]-fd[4] + (fd[5]+fd[6]) - (fd[8]+fd[7]))/self.rho
