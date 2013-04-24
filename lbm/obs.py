@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 #Input parsing
 parser = argparse.ArgumentParser(description='LBM flow in slit')
 parser.add_argument('-d','--diameter', metavar='D', type=int,
-                    nargs=2, default=[30], help='Diameter of disk obstacle')
+                    nargs=2, default=[35], help='Diameter of disk obstacle')
 parser.add_argument('-F','--force',metavar='F',type=float,
                     nargs=2, default=[1e-6,0.], help='External force field')
 parser.add_argument('-t','--tau',metavar='t',type=float,
@@ -25,7 +25,7 @@ def createobstacle(d,L):
     x =X-d/2.
     y =Y-d/2.
     R = np.sqrt(x**2+y**2) <= d/2.
-    wall=np.zeros([L,9*d])
+    wall=np.zeros([L,10*d])
     wall[30:31+d,d+3:2*d+4]=R
 #    wall[[0,-1]]=1 
     return wall
@@ -38,11 +38,13 @@ def main(args):
 
     wall = createobstacle(args.diameter[0],90)
     lat = lb_D2Q9.lattice(wall.shape,[0.,0.],args.tau[0])
+    lat.ux[:,:3]=0.05 #set intel macroscopic eq vel
+    lat.fd = lat.eqdistributions()#New equilibrium
+    finlet = np.copy( lat.fd[:,:,:3]) #get inlet macroscopic vel
     lat.setWalls(wall)
+    lat.updateMacroVariables()
 
-    for i in range(20000):
-        lat.updateMacroVariables()
-        lat.ux[:,:3]=0.04
+    for i in range(200000):
         if i%30 == 0:
             axU.cla()
             axU.imshow(np.sqrt(lat.ux**2+lat.uy**2),vmin=0,vmax=0.2)
@@ -51,13 +53,15 @@ def main(args):
             dyUx,dxUx=np.gradient(lat.ux)
             vort=np.abs(dxUy-dyUx)
             axR.cla()
-            axR.imshow(vort,vmin=0,vmax=0.2)
+            axR.imshow(vort,vmin=0,vmax=0.15)
             fig.savefig('tot'+fname)
         
         lat.collision()
         lat.streamming()
         lat.fd[:,:,-1]=np.copy(lat.fd[:,:,-2]) #gradient to cero on outlet
+        lat.fd[:,:,:3]=np.copy(finlet)
         lat.onWallBBNS_BC(wall)
+        lat.updateMacroVariables()
     np.savez('out.npz',lat.ux,lat.uy,lat.rho,wall)
 
 if __name__ == "__main__":

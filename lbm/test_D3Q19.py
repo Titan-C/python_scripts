@@ -57,27 +57,29 @@ def test_consArbiWalls():
        lat.onWallBBNS_BC(wall)
     print lat.rho-1.
     assert ( np.abs(lat.rho - r) < 4e-14 ).all()
-#    
-#def test_poiseuille():
-#    """Test poiseuille Flow"""
-#    lat = lb_D3Q19.lattice(size,[0.,0.,0.],tau)
-#    uxold=1
-#    step = 1
-#    wall=np.zeros(size)
-#    wall[[0,-1]]=1
-#    lat.setWalls(wall)
-#    while ( np.abs(uxold - lat.ux) > 1e-10 )[wall==0].all():
-#       lat.collision()
-#       lat.force(F)
-#       lat.streamming()
-#       lat.onWallBBNS_BC(wall)
-#       uxold=lat.ux
-#       lat.updateMacroVariables(F)
-#       step +=1
-#            
-#    an= anSolution(F[0],size[0],lat.nu)
-#    print lat.ux[:,1]
-#    print an
-#    print 'diff num - analytic: ', np.abs(lat.ux[:,1]-an)
-#    
-#    assert ( np.abs(lat.ux[:,1]-an) < 3e-4 )[1:-1].all()
+
+
+def test_poiseuille():
+    """Test poiseuille Flow"""
+    size=[21,1,3]
+    lat = lb_D3Q19.lattice(size,[0.,0.,0.],tau)
+    uxold=1
+    step = 1
+    wall=np.zeros(size)
+    wall[[0,-1]]=1
+    lat.setWalls(wall)
+    while ( np.abs(uxold - lat.ux) > 1e-10 )[wall==0].all():
+       lat.collision()
+       lat.force(F)
+       lat.streamming()
+       lat.onWallBBNS_BC(wall)
+       uxold=lat.ux
+       lat.updateMacroVariables(F)
+       step +=1
+            
+    an= anSolution(F[0],size[0],lat.nu)
+    print lat.ux[:,0,0]
+    print an
+    print 'diff num - analytic: ', np.abs(lat.ux[:,0,0]-an)
+    
+    assert ( np.abs(lat.ux[:,1]-an) < 3e-4 )[1:-1].all()
