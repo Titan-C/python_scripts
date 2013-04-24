@@ -107,20 +107,34 @@ class lattice:
 
     def force(self,F):
         """Adds microscopic forcing term"""
+        ux,uy,uz = self.ux, self.uy, self.uz
         cf = (1-0.5/self.tau)*3.0
-    
-        F0 = 4.0/9.0  *(   -self.ux*F[0]  -    self.uy *F[1] )
-        F1 = 1.0/9.0  *( (1-self.ux)*F[0] -    self.uy *F[1] + 3*self.ux*F[0] )
-        F2 = 1.0/9.0  *(   -self.ux *F[0] + (1-self.uy)*F[1] + 3*self.uy*F[1] )
-        F3 = 1.0/9.0  *((-1-self.ux)*F[0] -    self.uy *F[1] + 3*self.ux*F[0] )
-        F4 = 1.0/9.0  *(   -self.ux *F[0] +(-1-self.uy)*F[1] + 3*self.uy*F[1] )
-    
-        F5 = 1.0/36.0 *( (1-self.ux)*F[0] + (1-self.uy)*F[1] + 3*( self.ux+self.uy)*( F[0]+F[1]) )
-        F6 = 1.0/36.0 *((-1-self.ux)*F[0] + (1-self.uy)*F[1] + 3*(-self.ux+self.uy)*(-F[0]+F[1]) )
-        F7 = 1.0/36.0 *((-1-self.ux)*F[0] +(-1-self.uy)*F[1] + 3*(-self.ux-self.uy)*(-F[0]-F[1]) )
-        F8 = 1.0/36.0 *( (1-self.ux)*F[0] +(-1-self.uy)*F[1] + 3*( self.ux-self.uy)*( F[0]-F[1]) )
-    
-        self.fd+= cf*np.array([F0,F1,F2,F3,F4,F5,F6,F7,F8])
+
+        F0 = 1./3.  *(   -ux *F[0] -    uy *F[1]  -    uz *F[2] )
+
+        F1 = 1./18. *( (1-ux)*F[0] -    uy *F[1]  -    uz *F[2] + 3*ux*F[0])
+        F2 = 1./18. *((-1-ux)*F[0] -    uy *F[1]  -    uz *F[2] + 3*ux*F[0])
+        F3 = 1./18. *(   -ux *F[0] - (1-uy)*F[1]  -    uz *F[2] + 3*uy*F[0])
+        F4 = 1./18. *(   -ux *F[0] -(-1-uy)*F[1]  -    uz *F[2] + 3*uy*F[0])
+        F5 = 1./18. *(   -ux *F[0] -    uy *F[1]  - (1-uz)*F[2] + 3*uz*F[0])
+        F6 = 1./18. *(   -ux *F[0] -    uy *F[1]  -(-1-uz)*F[2] + 3*uz*F[0])
+
+        F7 = 1./36. *( (1-ux)*F[0] - (1-uy)*F[1]  -    uz *F[2] + 3*(ux+uy)*(F[0]+F[1]) )
+        F8 = 1./36. *((-1-ux)*F[0] -(-1-uy)*F[1]  -    uz *F[2] + 3*(ux+uy)*(F[0]+F[1]) )
+        F9 = 1./36. *( (1-ux)*F[0] -(-1-uy)*F[1]  -    uz *F[2] + 3*(ux-uy)*(F[0]-F[1]) )
+        F10= 1./36. *((-1-ux)*F[0] - (1-uy)*F[1]  -    uz *F[2] + 3*(ux-uy)*(F[0]-F[1]) )
+
+        F11= 1./36. *( (1-ux)*F[0] -    uy *F[1]  - (1-uz)*F[2] + 3*(ux+uz)*(F[0]+F[2]) )
+        F12= 1./36. *((-1-ux)*F[0] -    uy *F[1]  -(-1-uz)*F[2] + 3*(ux+uz)*(F[0]+F[2]) )
+        F13= 1./36. *( (1-ux)*F[0] -    uy *F[1]  -(-1-uz)*F[2] + 3*(ux-uz)*(F[0]-F[2]) )
+        F14= 1./36. *((-1-ux)*F[0] -    uy *F[1]  - (1-uz)*F[2] + 3*(ux-uz)*(F[0]-F[2]) )
+
+        F15= 1./36. *(   -ux *F[0] - (1-uy)*F[1]  - (1-uz)*F[2] + 3*(uy+uz)*(F[1]+F[2]) )
+        F16= 1./36. *(   -ux *F[0] -(-1-uy)*F[1]  -(-1-uz)*F[2] + 3*(uy+uz)*(F[1]+F[2]) )
+        F17= 1./36. *(   -ux *F[0] - (1-uy)*F[1]  -(-1-uz)*F[2] + 3*(uy-uz)*(F[1]-F[2]) )
+        F18= 1./36. *(   -ux *F[0] -(-1-uy)*F[1]  - (1-uz)*F[2] + 3*(uy-uz)*(F[1]-F[2]) )
+
+        self.fd+= cf*np.array([F0,F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12,F13,F14,F15,F16,F17,F18])
 
 ##boundaries handling
     def setWalls(self,walls):
