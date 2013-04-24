@@ -13,7 +13,7 @@ class lattice:
            and velocity"""
         self.ux = U[0]*np.ones(LatticeSize)
         self.uy = U[1]*np.ones(LatticeSize)
-        self.uz = U[1]*np.ones(LatticeSize)
+        self.uz = U[2]*np.ones(LatticeSize)
         self.rho = r*np.ones(LatticeSize)
         self.fd  = self.eqdistributions()
         self.tau = tau
@@ -71,7 +71,7 @@ class lattice:
         #Additional forcing
         self.ux  += 0.5*F[0]/self.rho
         self.uy  += 0.5*F[1]/self.rho
-        self.uz  += 0.5*F[1]/self.rho
+        self.uz  += 0.5*F[2]/self.rho
 
 #LBM steps
     def streamming(self):
@@ -98,7 +98,7 @@ class lattice:
         self.fd[15] = np.roll( np.roll(self.fd[15], 1,axis=1) , 1,axis=0) #y v,z /^
         self.fd[16] = np.roll( np.roll(self.fd[16],-1,axis=1) ,-1,axis=0) #y ^,z v/
         self.fd[17] = np.roll( np.roll(self.fd[17], 1,axis=1) ,-1,axis=0) #y v,z v/
-        self.fd[18] = np.roll( np.roll(self.fd[17],-1,axis=1) , 1,axis=0) #y ^,z /^
+        self.fd[18] = np.roll( np.roll(self.fd[18],-1,axis=1) , 1,axis=0) #y ^,z /^
 
     def collision(self):
         """Modify distribution funtions according to collision term"""
@@ -129,29 +129,46 @@ class lattice:
 
     def onWallBBNS_BC(self,walls):
         """Bounceback no-slip boundary conditions for arbitrary walls"""
-        Ny,Nx=walls.shape
-        solid=np.array(np.where(walls==1))
+        Nz,Ny,Nx=walls.shape
+        so=np.array(np.where(walls==1)) #so stands for Solid Object
         #generate direction vectors, mantain periodic boundary conditions
-        goright=solid[1]+1
-        goright[goright==Nx]=0
-        goleft=solid[1]-1
-        goleft[goleft==-1]+=Nx
-        goup=solid[0]-1
-        goup[goup==-1]+=Ny
-        godown=solid[0]+1
-        godown[godown==Ny]=0
-        #colision to right,left, direction 1-3
-        self.fd[1,solid[0],goright] = self.fd[3,solid[0],solid[1]]
-        self.fd[3,solid[0],goleft] = self.fd[1,solid[0],solid[1]]
-        #colision top,botto direction 2-4
-        self.fd[2,goup,solid[1]] = self.fd[4,solid[0],solid[1]]
-        self.fd[4,godown,solid[1]] = self.fd[2,solid[0],solid[1]]
-        #diagonal 5-7
-        self.fd[5,goup,goright] = self.fd[7,solid[0],solid[1]]
-        self.fd[7,godown,goleft] = self.fd[5,solid[0],solid[1]]
-        #diagonal 6-8
-        self.fd[6,goup,goleft] = self.fd[8,solid[0],solid[1]]
-        self.fd[8,godown,goright] = self.fd[6,solid[0],solid[1]]
+        xp=so[2]+1
+        xp[xp==Nx]=0
+        xm=so[2]-1
+        xm[xm==-1]+=Nx
         
+        yp=so[1]+1
+        yp[yp==Ny]=0
+        ym=so[1]-1
+        ym[ym==-1]+=Ny
+        
+        zp=so[0]+1
+        zp[zp==Nz]=0
+        zm=so[0]-1
+        zm[zm==-1]+=Nz
+
+        #Collisions: Mayor Axis
+        self.fd[1,so[0],so[1],xp   ] = self.fd[2,so[0],so[1],so[2]]
+        self.fd[2,so[0],so[1],xm   ] = self.fd[1,so[0],so[1],so[2]]
+        self.fd[3,so[0],yp   ,so[2]] = self.fd[4,so[0],so[1],so[2]]
+        self.fd[4,so[0],ym   ,so[2]] = self.fd[3,so[0],so[1],so[2]]
+        self.fd[5,zp   ,so[1],so[2]] = self.fd[6,so[0],so[1],so[2]]
+        self.fd[6,zm   ,so[1],so[2]] = self.fd[5,so[0],so[1],so[2]]
+        #Collisions: Diagonal Axis
+        self.fd[7, so[0],yp   ,xp   ] = self.fd[8,so[0],so[1],so[2]]
+        self.fd[8, so[0],ym   ,xm   ] = self.fd[7,so[0],so[1],so[2]]
+        self.fd[9, so[0],ym   ,xp   ] = self.fd[10,so[0],so[1],so[2]]
+        self.fd[10,so[0],yp   ,xm   ] = self.fd[9,so[0],so[1],so[2]]
+        
+        self.fd[11,zp   ,so[1],xp   ] = self.fd[12,so[0],so[1],so[2]]
+        self.fd[12,zm   ,so[1],xm   ] = self.fd[11,so[0],so[1],so[2]]
+        self.fd[13,zm   ,so[1],xp   ] = self.fd[14,so[0],so[1],so[2]]
+        self.fd[14,zp   ,so[1],xm   ] = self.fd[13,so[0],so[1],so[2]]
+        
+        self.fd[15,zp   ,yp   ,so[2]] = self.fd[12,so[0],so[1],so[2]]
+        self.fd[16,zm   ,ym   ,so[2]] = self.fd[11,so[0],so[1],so[2]]
+        self.fd[17,zm   ,yp   ,so[2]] = self.fd[14,so[0],so[1],so[2]]
+        self.fd[18,zp   ,ym   ,so[2]] = self.fd[13,so[0],so[1],so[2]]
+
         #clean solid
-        self.fd[:,solid[0],solid[1]]=0
+        self.fd[:,so[0],so[1],so[2]]=0
