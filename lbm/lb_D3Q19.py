@@ -165,10 +165,10 @@ class lattice:
         self.fd[13,zm   ,so[1],xp   ] = self.fd[14,so[0],so[1],so[2]]
         self.fd[14,zp   ,so[1],xm   ] = self.fd[13,so[0],so[1],so[2]]
         
-        self.fd[15,zp   ,yp   ,so[2]] = self.fd[12,so[0],so[1],so[2]]
-        self.fd[16,zm   ,ym   ,so[2]] = self.fd[11,so[0],so[1],so[2]]
-        self.fd[17,zm   ,yp   ,so[2]] = self.fd[14,so[0],so[1],so[2]]
-        self.fd[18,zp   ,ym   ,so[2]] = self.fd[13,so[0],so[1],so[2]]
+        self.fd[15,zp   ,yp   ,so[2]] = self.fd[16,so[0],so[1],so[2]]
+        self.fd[16,zm   ,ym   ,so[2]] = self.fd[15,so[0],so[1],so[2]]
+        self.fd[17,zm   ,yp   ,so[2]] = self.fd[18,so[0],so[1],so[2]]
+        self.fd[18,zp   ,ym   ,so[2]] = self.fd[17,so[0],so[1],so[2]]
 
         #clean solid
         self.fd[:,so[0],so[1],so[2]]=0
