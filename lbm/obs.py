@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 #Input parsing
 parser = argparse.ArgumentParser(description='LBM flow in slit')
 parser.add_argument('-d','--diameter', metavar='D', type=int,
-                    nargs=2, default=[35], help='Diameter of disk obstacle')
+                    nargs=2, default=[25], help='Diameter of disk obstacle')
 parser.add_argument('-F','--force',metavar='F',type=float,
                     nargs=2, default=[1e-6,0.], help='External force field')
 parser.add_argument('-t','--tau',metavar='t',type=float,
@@ -26,8 +26,8 @@ def createobstacle(d,L):
     y =Y-d/2.
     R = np.sqrt(x**2+y**2) <= d/2.
     wall=np.zeros([L,10*d])
-    wall[30:31+d,d+3:2*d+4]=R
-#    wall[[0,-1]]=1 
+    wall[42:43+d,d+3:2*d+4]=R
+    wall[[0,-1]]=1 
     return wall
     
 
@@ -36,16 +36,16 @@ def main(args):
     axU = fig.add_subplot(211)
     axR = fig.add_subplot(212)
 
-    wall = createobstacle(args.diameter[0],90)
+    wall = createobstacle(args.diameter[0],110)
     lat = lb_D2Q9.lattice(wall.shape,[0.,0.],args.tau[0])
     lat.ux[:,:3]=0.05 #set intel macroscopic eq vel
     lat.fd = lat.eqdistributions()#New equilibrium
-    finlet = np.copy( lat.fd[:,:,:3]) #get inlet macroscopic vel
     lat.setWalls(wall)
+    finlet = np.copy( lat.fd[:,:,:3]) #get inlet macroscopic vel
     lat.updateMacroVariables()
 
-    for i in range(200000):
-        if i%30 == 0:
+    for i in range(400000):
+        if i%50 == 0:
             axU.cla()
             axU.imshow(np.sqrt(lat.ux**2+lat.uy**2),vmin=0,vmax=0.2)
             fname = '%08d.png'%i
@@ -53,7 +53,7 @@ def main(args):
             dyUx,dxUx=np.gradient(lat.ux)
             vort=np.abs(dxUy-dyUx)
             axR.cla()
-            axR.imshow(vort,vmin=0,vmax=0.15)
+            axR.imshow(vort,vmin=0,vmax=0.1)
             fig.savefig('tot'+fname)
         
         lat.collision()

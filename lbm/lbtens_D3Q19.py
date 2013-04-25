@@ -5,7 +5,7 @@ Created on Tue Apr 23 13:45:43 2013
 @author: Oscar Najera
 Lattice Boltzmann 3D en D3Q19 class
 """
-from numpy import array, sum, ones,zeros, roll, where,outer,tensordot
+from numpy import array, sum, ones,zeros, roll, where,outer,tensordot,dot
 
 class lattice:
     def __init__(self,LatticeSize,U,tau,r=1):
@@ -43,10 +43,9 @@ class lattice:
         
         self.rho = sum(self.fd,axis=0)
         self.rho[self.rho<1e-13]=1
-        invrho=(1/self.rho).reshape(self.Nz,self.Ny,self.Nx,1)
-        self.U = invrho*tensordot(self.fd,self.E,axes=(0,0))
+        self.U = tensordot(self.fd,self.E,axes=(0,0))/self.rho.reshape(self.Nz,self.Ny,self.Nx,1)
         #Additional forcing
-        self.U += 0.5*invrho*F
+        self.U += 0.5*F/self.rho.reshape(self.Nz,self.Ny,self.Nx,1)
 
 #LBM steps
     def streamming(self):
@@ -82,34 +81,8 @@ class lattice:
 
     def force(self,F):
         """Adds microscopic forcing term"""
-        ux,uy,uz = self.ux, self.uy, self.uz
-        cf = (1-0.5/self.tau)*3.0
-
-        F0 = 1./3.  *(   -ux *F[0] -    uy *F[1]  -    uz *F[2] )
-
-        F1 = 1./18. *( (1-ux)*F[0] -    uy *F[1]  -    uz *F[2] + 3*ux*F[0])
-        F2 = 1./18. *((-1-ux)*F[0] -    uy *F[1]  -    uz *F[2] + 3*ux*F[0])
-        F3 = 1./18. *(   -ux *F[0] - (1-uy)*F[1]  -    uz *F[2] + 3*uy*F[0])
-        F4 = 1./18. *(   -ux *F[0] -(-1-uy)*F[1]  -    uz *F[2] + 3*uy*F[0])
-        F5 = 1./18. *(   -ux *F[0] -    uy *F[1]  - (1-uz)*F[2] + 3*uz*F[0])
-        F6 = 1./18. *(   -ux *F[0] -    uy *F[1]  -(-1-uz)*F[2] + 3*uz*F[0])
-
-        F7 = 1./36. *( (1-ux)*F[0] - (1-uy)*F[1]  -    uz *F[2] + 3*(ux+uy)*(F[0]+F[1]) )
-        F8 = 1./36. *((-1-ux)*F[0] -(-1-uy)*F[1]  -    uz *F[2] + 3*(ux+uy)*(F[0]+F[1]) )
-        F9 = 1./36. *( (1-ux)*F[0] -(-1-uy)*F[1]  -    uz *F[2] + 3*(ux-uy)*(F[0]-F[1]) )
-        F10= 1./36. *((-1-ux)*F[0] - (1-uy)*F[1]  -    uz *F[2] + 3*(ux-uy)*(F[0]-F[1]) )
-
-        F11= 1./36. *( (1-ux)*F[0] -    uy *F[1]  - (1-uz)*F[2] + 3*(ux+uz)*(F[0]+F[2]) )
-        F12= 1./36. *((-1-ux)*F[0] -    uy *F[1]  -(-1-uz)*F[2] + 3*(ux+uz)*(F[0]+F[2]) )
-        F13= 1./36. *( (1-ux)*F[0] -    uy *F[1]  -(-1-uz)*F[2] + 3*(ux-uz)*(F[0]-F[2]) )
-        F14= 1./36. *((-1-ux)*F[0] -    uy *F[1]  - (1-uz)*F[2] + 3*(ux-uz)*(F[0]-F[2]) )
-
-        F15= 1./36. *(   -ux *F[0] - (1-uy)*F[1]  - (1-uz)*F[2] + 3*(uy+uz)*(F[1]+F[2]) )
-        F16= 1./36. *(   -ux *F[0] -(-1-uy)*F[1]  -(-1-uz)*F[2] + 3*(uy+uz)*(F[1]+F[2]) )
-        F17= 1./36. *(   -ux *F[0] - (1-uy)*F[1]  -(-1-uz)*F[2] + 3*(uy-uz)*(F[1]-F[2]) )
-        F18= 1./36. *(   -ux *F[0] -(-1-uy)*F[1]  - (1-uz)*F[2] + 3*(uy-uz)*(F[1]-F[2]) )
-
-        self.fd+= cf*array([F0,F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12,F13,F14,F15,F16,F17,F18])
+        cf = (1-0.5/self.tau)*3.0*self.w.reshape(19,1,1,1)
+        self.fd+= cf*( dot(self.E.reshape(19,1,1,1,3)-self.U, F) + 3 * tensordot(self.E,self.U,axes=(1,3)) * dot(self.E,F).reshape(19,1,1,1))
 
 ##boundaries handling
     def setWalls(self,walls):
