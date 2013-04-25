@@ -29,7 +29,7 @@ class lattice:
     def eqdistributions(self):
         """Evaluate Equilibrium distribution functions"""
 
-        f=outer(self.w,self.rho).reshape(19,self.Nz,self.Ny,self.Nx)
+        f=self.w.reshape(19,self.Nz,self.Ny,self.Nx)*self.rho
         eu=tensordot(self.E,self.U,axes=(1,3))
         u2=sum(self.U**2,axis=3)
         f*=(1+3*eu+4.5*eu**2-1.5*u2)
