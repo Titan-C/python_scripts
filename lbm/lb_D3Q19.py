@@ -5,16 +5,16 @@ Created on Tue Apr 23 13:45:43 2013
 @author: Oscar Najera
 Lattice Boltzmann 3D en D3Q19 class
 """
-import numpy as np
+from numpy import array, sum, ones, roll, where
 
 class lattice:
     def __init__(self,LatticeSize,U,tau,r=1):
         """Unitiate dicrete distribution functions for a given LatticeSize
            and velocity"""
-        self.ux = U[0]*np.ones(LatticeSize)
-        self.uy = U[1]*np.ones(LatticeSize)
-        self.uz = U[2]*np.ones(LatticeSize)
-        self.rho = r*np.ones(LatticeSize)
+        self.ux = U[0]*ones(LatticeSize)
+        self.uy = U[1]*ones(LatticeSize)
+        self.uz = U[2]*ones(LatticeSize)
+        self.rho = r*ones(LatticeSize)
         self.fd  = self.eqdistributions()
         self.tau = tau
         self.nu  = (tau-0.5)/3.
@@ -48,7 +48,7 @@ class lattice:
         f17= 1.0/36.0 *rho*(1 +3*(uy-uz)  +4.5*(uy-uz)**2  -1.5*u2)
         f18= 1.0/36.0 *rho*(1 +3*(-uy+uz) +4.5*(-uy+uz)**2 -1.5*u2)
     
-        return np.array([f0,f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18])
+        return array([f0,f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18])
     
     def velocities(self):
         ux2 = self.ux**2
@@ -63,7 +63,7 @@ class lattice:
            Equilibrium velocity includes forcing"""
         f= self.fd
         
-        self.rho = np.sum(f,axis=0)
+        self.rho = sum(f,axis=0)
         self.rho[self.rho<1e-13]=1
         self.ux = ( (f[1]-f[2]) + (f[7]-f[8])   + (f[9] -f[10]) + (f[11]-f[12]) + (f[13]-f[14]) )/self.rho
         self.uy = ( (f[3]-f[4]) + (f[7]-f[8])   - (f[9] -f[10]) + (f[15]-f[16]) + (f[17]-f[18]) )/self.rho
@@ -78,27 +78,27 @@ class lattice:
         """Stream distributions funtions along al discrete velocity directions
            keep periodic boundary conditions on all edges"""
         
-        self.fd[1] = np.roll(self.fd[1], 1,axis=2)  #x >
-        self.fd[2] = np.roll(self.fd[2],-1,axis=2)  #x <
-        self.fd[3] = np.roll(self.fd[3], 1,axis=1)  #y v
-        self.fd[4] = np.roll(self.fd[4],-1,axis=1)  #y ^
-        self.fd[5] = np.roll(self.fd[5], 1,axis=0)  #z /^
-        self.fd[6] = np.roll(self.fd[6],-1,axis=0)  #z v/
+        self.fd[1] = roll(self.fd[1], 1,axis=2)  #x >
+        self.fd[2] = roll(self.fd[2],-1,axis=2)  #x <
+        self.fd[3] = roll(self.fd[3], 1,axis=1)  #y v
+        self.fd[4] = roll(self.fd[4],-1,axis=1)  #y ^
+        self.fd[5] = roll(self.fd[5], 1,axis=0)  #z /^
+        self.fd[6] = roll(self.fd[6],-1,axis=0)  #z v/
         
-        self.fd[7] = np.roll( np.roll(self.fd[7], 1,axis=2) , 1,axis=1) #x >,y v
-        self.fd[8] = np.roll( np.roll(self.fd[8],-1,axis=2) ,-1,axis=1) #x <,y ^
-        self.fd[9] = np.roll( np.roll(self.fd[9], 1,axis=2) ,-1,axis=1) #x >,y ^
-        self.fd[10]= np.roll( np.roll(self.fd[10],-1,axis=2), 1,axis=1) #x <,y v
+        self.fd[7] = roll( roll(self.fd[7], 1,axis=2) , 1,axis=1) #x >,y v
+        self.fd[8] = roll( roll(self.fd[8],-1,axis=2) ,-1,axis=1) #x <,y ^
+        self.fd[9] = roll( roll(self.fd[9], 1,axis=2) ,-1,axis=1) #x >,y ^
+        self.fd[10]= roll( roll(self.fd[10],-1,axis=2), 1,axis=1) #x <,y v
         
-        self.fd[11] = np.roll( np.roll(self.fd[11], 1,axis=2) , 1,axis=0) #x >,z /^
-        self.fd[12] = np.roll( np.roll(self.fd[12],-1,axis=2) ,-1,axis=0) #x <,z v/
-        self.fd[13] = np.roll( np.roll(self.fd[13], 1,axis=2) ,-1,axis=0) #x >,z v/
-        self.fd[14] = np.roll( np.roll(self.fd[14],-1,axis=2) , 1,axis=0) #x <,z /^
+        self.fd[11] = roll( roll(self.fd[11], 1,axis=2) , 1,axis=0) #x >,z /^
+        self.fd[12] = roll( roll(self.fd[12],-1,axis=2) ,-1,axis=0) #x <,z v/
+        self.fd[13] = roll( roll(self.fd[13], 1,axis=2) ,-1,axis=0) #x >,z v/
+        self.fd[14] = roll( roll(self.fd[14],-1,axis=2) , 1,axis=0) #x <,z /^
         
-        self.fd[15] = np.roll( np.roll(self.fd[15], 1,axis=1) , 1,axis=0) #y v,z /^
-        self.fd[16] = np.roll( np.roll(self.fd[16],-1,axis=1) ,-1,axis=0) #y ^,z v/
-        self.fd[17] = np.roll( np.roll(self.fd[17], 1,axis=1) ,-1,axis=0) #y v,z v/
-        self.fd[18] = np.roll( np.roll(self.fd[18],-1,axis=1) , 1,axis=0) #y ^,z /^
+        self.fd[15] = roll( roll(self.fd[15], 1,axis=1) , 1,axis=0) #y v,z /^
+        self.fd[16] = roll( roll(self.fd[16],-1,axis=1) ,-1,axis=0) #y ^,z v/
+        self.fd[17] = roll( roll(self.fd[17], 1,axis=1) ,-1,axis=0) #y v,z v/
+        self.fd[18] = roll( roll(self.fd[18],-1,axis=1) , 1,axis=0) #y ^,z /^
 
     def collision(self):
         """Modify distribution funtions according to collision term"""
@@ -134,7 +134,7 @@ class lattice:
         F17= 1./36. *(   -ux *F[0] - (1-uy)*F[1]  -(-1-uz)*F[2] + 3*(uy-uz)*(F[1]-F[2]) )
         F18= 1./36. *(   -ux *F[0] -(-1-uy)*F[1]  - (1-uz)*F[2] + 3*(uy-uz)*(F[1]-F[2]) )
 
-        self.fd+= cf*np.array([F0,F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12,F13,F14,F15,F16,F17,F18])
+        self.fd+= cf*array([F0,F1,F2,F3,F4,F5,F6,F7,F8,F9,F10,F11,F12,F13,F14,F15,F16,F17,F18])
 
 ##boundaries handling
     def setWalls(self,walls):
@@ -144,7 +144,7 @@ class lattice:
     def onWallBBNS_BC(self,walls):
         """Bounceback no-slip boundary conditions for arbitrary walls"""
         Nz,Ny,Nx=walls.shape
-        so=np.array(np.where(walls==1)) #so stands for Solid Object
+        so=array(where(walls==1)) #so stands for Solid Object
         #generate direction vectors, mantain periodic boundary conditions
         xp=so[2]+1
         xp[xp==Nx]=0
