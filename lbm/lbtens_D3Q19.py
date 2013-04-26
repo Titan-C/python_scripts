@@ -5,7 +5,7 @@ Created on Tue Apr 23 13:45:43 2013
 @author: Oscar Najera
 Lattice Boltzmann 3D en D3Q19 class
 """
-from numpy import array, sum, ones,zeros, roll, where,outer,tensordot,dot
+from numpy import array, sum, ones,zeros, roll, where,tensordot,dot
 
 class lattice:
     def __init__(self,LatticeSize,U,tau,r=1):
@@ -29,7 +29,7 @@ class lattice:
     def eqdistributions(self):
         """Evaluate Equilibrium distribution functions"""
 
-        f=self.w.reshape(19,self.Nz,self.Ny,self.Nx)*self.rho
+        f=self.w.reshape(19,1,1,1)*self.rho
         eu=tensordot(self.E,self.U,axes=(1,3))
         u2=sum(self.U**2,axis=3)
         f*=(1+3*eu+4.5*eu**2-1.5*u2)
