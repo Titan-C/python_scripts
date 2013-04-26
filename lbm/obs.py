@@ -5,9 +5,9 @@ Poiseuille Flow 2D
 
 import argparse
 import lb_D2Q9
+from classtest import anSolution
 import numpy as np
 import matplotlib.pyplot as plt
-#from poiseuille2D import anSolution
 
 #Input parsing
 parser = argparse.ArgumentParser(description='LBM flow in slit')
@@ -36,12 +36,12 @@ def main(args):
     axU = fig.add_subplot(211)
     axR = fig.add_subplot(212)
 
-    wall = createobstacle(args.diameter[0],110)
+    wall = createobstacle(args.diameter[0],111)
     lat = lb_D2Q9.lattice(wall.shape,[0.,0.],args.tau[0])
-    lat.ux[:,:3]=0.05 #set intel macroscopic eq vel
+    lat.ux[:,0]=anSolution(5e-8,111,lat.nu) #set intel macroscopic eq vel
     lat.fd = lat.eqdistributions()#New equilibrium
     lat.setWalls(wall)
-    finlet = np.copy( lat.fd[:,:,:3]) #get inlet macroscopic vel
+    finlet = np.copy( lat.fd[:,:,:1]) #get inlet macroscopic vel
     lat.updateMacroVariables()
 
     for i in range(400000):
@@ -58,9 +58,9 @@ def main(args):
         
         lat.collision()
         lat.streamming()
-        lat.fd[:,:,-1]=np.copy(lat.fd[:,:,-2]) #gradient to cero on outlet
-        lat.fd[:,:,:3]=np.copy(finlet)
         lat.onWallBBNS_BC(wall)
+        lat.fd[:,:,-1]=np.copy(lat.fd[:,:,-2]) #gradient to cero on outlet
+        lat.fd[:,:,:1]=np.copy(finlet)
         lat.updateMacroVariables()
     np.savez('out.npz',lat.ux,lat.uy,lat.rho,wall)
 
