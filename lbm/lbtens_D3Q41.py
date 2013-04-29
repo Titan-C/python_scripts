@@ -5,7 +5,7 @@ Created on Tue Apr 23 13:45:43 2013
 @author: Oscar Najera
 Lattice Boltzmann 3D en D3Q19 class
 """
-from numpy import array, sum, ones,zeros, roll, where,tensordot,dot,sqrt
+from numpy import array, sum, ones,zeros, roll, where,tensordot,dot,sqrt,eye,trace
 
 class lattice:
     def __init__(self,LatticeSize,U,tau,r=1):
@@ -21,28 +21,37 @@ class lattice:
                         [-1,1,-1],[-1,-1,1],[1,-1,-1],[-1,-1,-1],
                         [3,0,0],[-3,0,0],[0,3,0],[0,-3,0],[0,0,3],[0,0,-3],
                         [3,3,3],[3,3,-3],[3,-3,3],[-3,3,3],
-                        [-3,3,-3],[-3,-3,0],[3,-3,-3],[-3,-3,-3] ])
-        w0=2.*(5045-1507*sqrt(19))/2025.
+                        [-3,3,-3],[-3,-3,3],[3,-3,-3],[-3,-3,-3] ])
+        self.g = array([eye(3)]*self.Nz*self.Ny*self.Nx).reshape(self.Nz,self.Ny,self.Nx,3,3)
+        w0=[2.*(5045-1507*sqrt(19))/2025.]
         w1_6=6*[37./5/sqrt(10)-91./40.]
         w7_18=12*[(55-17*sqrt(10))/50.]
         w19_26=8*[(233*sqrt(10)-730)/1600.]
         w27_32=6*[(295-92*sqrt(10))/16200.]
         w33_40=8*[(130-41*sqrt(10))/129600.]
         self.w=array(w0+w1_6+w7_18+w19_26+w27_32+w33_40)
-        import pdb; pdb.set_trace()
         self.rho = r*ones(LatticeSize)
         
+        self.f=self.w.reshape(41,1,1,1)*self.rho
+        self.ge=tensordot(self.E,self.g,axes=(1,4))
+        self.ege=sum(self.E.reshape(41,1,1,1,3)*self.ge,axis=4)
+        self.e2=sum(self.E**2,axis=1).reshape(41,1,1,1)
+        self.gii=trace(self.g,axis1=3,axis2=4)
+        self.cs2=1-sqrt(2./5.)
         self.fd  = self.eqdistributions()
         self.tau = tau
         self.nu  = (tau-0.5)/3.
 
     def eqdistributions(self):
         """Evaluate Equilibrium distribution functions"""
-
-        f=self.w.reshape(41,1,1,1)*self.rho
+        cs2=self.cs2
         eu=tensordot(self.E,self.U,axes=(1,3))
         u2=sum(self.U**2,axis=3)
-        f*=(1+3*eu+4.5*eu**2-1.5*u2)
+        uge=sum(self.U*self.ge,axis=4)
+
+        f =self.f*(5./2.+2*eu/cs2+0.5*self.ege/cs2-0.5*self.e2+0.5*(eu/cs2)**2-0.5*self.gii-0.5*u2/cs2
+        +(eu/cs2)**3/6.-0.5*eu*u2/cs2**2+0.5*eu*(self.ege-self.e2)/cs2**2
+        -0.5*eu*(self.gii-3)/cs2-uge/cs2)
 
         return f
 
