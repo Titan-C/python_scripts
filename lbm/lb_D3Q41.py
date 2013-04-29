@@ -5,7 +5,7 @@ Created on Tue Apr 23 13:45:43 2013
 @author: Oscar Najera
 Lattice Boltzmann 3D en D3Q19 class
 """
-from numpy import array, sum, ones,zeros, roll, where,tensordot,dot,sqrt,eye,trace
+from numpy import array, sum, ones,zeros, roll, where,tensordot,dot,sqrt,eye,trace,diag
 
 class lattice:
     def __init__(self,LatticeSize,U,tau,r=1):
@@ -17,12 +17,12 @@ class lattice:
                         [1,1,0],[-1,-1,0],[1,-1,0],[-1,1,0],
                         [1,0,1],[-1,0,-1],[1,0,-1],[-1,0,1],
                         [0,1,1],[0,-1,-1],[0,1,-1],[0,-1,1],
-                        [1,1,1],[1,1,-1],[1,-1,1],[-1,1,1],
-                        [-1,1,-1],[-1,-1,1],[1,-1,-1],[-1,-1,-1],
+                        [1,1,1],[-1,-1,-1],[1,1,-1],[-1,-1,1],
+                        [1,-1,1],[-1,1,-1],[1,-1,-1],[-1,1,1],
                         [3,0,0],[-3,0,0],[0,3,0],[0,-3,0],[0,0,3],[0,0,-3],
-                        [3,3,3],[3,3,-3],[3,-3,3],[-3,3,3],
-                        [-3,3,-3],[-3,-3,3],[3,-3,-3],[-3,-3,-3] ])
-        self.g = array([eye(3)]*self.Nz*self.Ny*self.Nx).reshape(self.Nz,self.Ny,self.Nx,3,3)
+                        [3,3,3],[-3,-3,-3],[3,3,-3],[-3,-3,3],
+                        [3,-3,3],[-3,3,-3],[3,-3,-3],[-3,3,3] ])
+        self.g = array([diag([1,1,1])]*self.Nz*self.Ny*self.Nx).reshape(self.Nz,self.Ny,self.Nx,3,3)
         w0=[2.*(5045-1507*sqrt(10))/2025.]
         w1_6=6*[37./5/sqrt(10)-91./40.]
         w7_18=12*[(55-17*sqrt(10))/50.]
@@ -96,14 +96,14 @@ class lattice:
         self.fd[18] = roll( roll(self.fd[18],-1,axis=1) , 1,axis=0) #y ^,z /^
 
         self.fd[19] = roll( roll( roll(self.fd[19], 1,axis=2) , 1,axis=1) , 1,axis=0) #x >,y v,z /^
-        self.fd[20] = roll( roll( roll(self.fd[20], 1,axis=2) , 1,axis=1) ,-1,axis=0) #x >,y v,z v/
-        self.fd[21] = roll( roll( roll(self.fd[21], 1,axis=2) ,-1,axis=1) , 1,axis=0) #x >,y ^,z /^
-        self.fd[22] = roll( roll( roll(self.fd[22],-1,axis=2) , 1,axis=1) , 1,axis=0) #x <,y v,z /^
+        self.fd[20] = roll( roll( roll(self.fd[20],-1,axis=2) ,-1,axis=1) ,-1,axis=0) #x <,y ^,z v/
+        self.fd[21] = roll( roll( roll(self.fd[21], 1,axis=2) , 1,axis=1) ,-1,axis=0) #x >,y v,z v/
+        self.fd[22] = roll( roll( roll(self.fd[22],-1,axis=2) ,-1,axis=1) , 1,axis=0) #x <,y ^,z /^
 
-        self.fd[23] = roll( roll( roll(self.fd[23],-1,axis=2) , 1,axis=1) ,-1,axis=0) #x <,y v,z v/
-        self.fd[24] = roll( roll( roll(self.fd[24],-1,axis=2) ,-1,axis=1) , 1,axis=0) #x <,y ^,z /^
+        self.fd[23] = roll( roll( roll(self.fd[23], 1,axis=2) ,-1,axis=1) , 1,axis=0) #x >,y ^,z /^
+        self.fd[24] = roll( roll( roll(self.fd[24],-1,axis=2) , 1,axis=1) ,-1,axis=0) #x <,y v,z v/
         self.fd[25] = roll( roll( roll(self.fd[25], 1,axis=2) ,-1,axis=1) ,-1,axis=0) #x >,y ^,z v/
-        self.fd[26] = roll( roll( roll(self.fd[26],-1,axis=2) ,-1,axis=1) ,-1,axis=0) #x <,y ^,z v/
+        self.fd[26] = roll( roll( roll(self.fd[26],-1,axis=2) , 1,axis=1) , 1,axis=0) #x <,y v,z /^
 
         self.fd[27] = roll(self.fd[27], 3,axis=2)  #3x >
         self.fd[28] = roll(self.fd[28],-3,axis=2)  #3x <
@@ -113,14 +113,15 @@ class lattice:
         self.fd[32] = roll(self.fd[32],-3,axis=0)  #3z v/
 
         self.fd[33] = roll( roll( roll(self.fd[33], 3,axis=2) , 3,axis=1) , 3,axis=0) #3x >,3y v,3z /^
-        self.fd[34] = roll( roll( roll(self.fd[34], 3,axis=2) , 3,axis=1) ,-3,axis=0) #3x >,3y v,3z v/
-        self.fd[35] = roll( roll( roll(self.fd[35], 3,axis=2) ,-3,axis=1) , 3,axis=0) #3x >,3y ^,3z /^
-        self.fd[36] = roll( roll( roll(self.fd[36],-3,axis=2) , 3,axis=1) , 3,axis=0) #3x <,3y v,3z /^
+        self.fd[34] = roll( roll( roll(self.fd[34],-3,axis=2) ,-3,axis=1) ,-3,axis=0) #3x <,3y ^,3z v/
+        self.fd[35] = roll( roll( roll(self.fd[35], 3,axis=2) , 3,axis=1) ,-3,axis=0) #3x >,3y v,3z v/
+        self.fd[36] = roll( roll( roll(self.fd[36],-3,axis=2) ,-3,axis=1) , 3,axis=0) #3x <,3y ^,3z /^
 
-        self.fd[37] = roll( roll( roll(self.fd[37],-3,axis=2) , 3,axis=1) ,-3,axis=0) #3x <,3y v,3z v/
-        self.fd[38] = roll( roll( roll(self.fd[38],-3,axis=2) ,-3,axis=1) , 3,axis=0) #3x <,3y ^,3z /^
+        self.fd[37] = roll( roll( roll(self.fd[37], 3,axis=2) ,-3,axis=1) , 3,axis=0) #3x >,3y ^,3z /^
+        self.fd[38] = roll( roll( roll(self.fd[38],-3,axis=2) , 3,axis=1) ,-3,axis=0) #3x <,3y v,3z v/
         self.fd[39] = roll( roll( roll(self.fd[39], 3,axis=2) ,-3,axis=1) ,-3,axis=0) #3x >,3y ^,3z v/
-        self.fd[40] = roll( roll( roll(self.fd[40],-3,axis=2) ,-3,axis=1) ,-3,axis=0) #3x <,3y ^,3z v/
+        self.fd[40] = roll( roll( roll(self.fd[40],-3,axis=2) , 3,axis=1) , 3,axis=0) #3x <,3y v,3z /^
+
 
 
     def collision(self):
@@ -145,18 +146,42 @@ class lattice:
         #generate direction vectors, mantain periodic boundary conditions
         xp=so[2]+1
         xp[xp==Nx]=0
+        x3p=so[2]+3
+        x3p[x3p==Nx]  =0
+        x3p[x3p==Nx+1]=1
+        x3p[x3p==Nx+2]=2
         xm=so[2]-1
         xm[xm==-1]+=Nx
+        x3m=so[2]-3
+        x3m[x3m==-1]+=Nx
+        x3m[x3m==-2]+=Nx
+        x3m[x3m==-3]+=Nx
         
         yp=so[1]+1
         yp[yp==Ny]=0
+        y3p=so[1]+3
+        y3p[y3p==Ny]  =0
+        y3p[y3p==Ny+1]=1
+        y3p[y3p==Ny+2]=2
         ym=so[1]-1
         ym[ym==-1]+=Ny
+        y3m=so[1]-3
+        y3m[y3m==-1]+=Ny
+        y3m[y3m==-2]+=Ny
+        y3m[y3m==-3]+=Ny
         
         zp=so[0]+1
         zp[zp==Nz]=0
+        z3p=so[0]+3
+        z3p[z3p==Nz]  =0
+        z3p[z3p==Nz+1]=1
+        z3p[z3p==Nz+2]=2
         zm=so[0]-1
         zm[zm==-1]+=Nz
+        z3m=so[0]-1
+        z3m[z3m==-1]+=Nz
+        z3m[z3m==-2]+=Nz
+        z3m[z3m==-3]+=Nz
 
         #Collisions: Mayor Axis
         self.fd[1,so[0],so[1],xp   ] = self.fd[2,so[0],so[1],so[2]]
@@ -180,6 +205,33 @@ class lattice:
         self.fd[16,zm   ,ym   ,so[2]] = self.fd[15,so[0],so[1],so[2]]
         self.fd[17,zm   ,yp   ,so[2]] = self.fd[18,so[0],so[1],so[2]]
         self.fd[18,zp   ,ym   ,so[2]] = self.fd[17,so[0],so[1],so[2]]
+        #Collision: Cube vertices
+        self.fd[19,zp   ,yp   ,xp   ] = self.fd[20,so[0],so[1],so[2]]
+        self.fd[20,zm   ,ym   ,xm   ] = self.fd[19,so[0],so[1],so[2]]
+        self.fd[21,zm   ,yp   ,xp   ] = self.fd[22,so[0],so[1],so[2]]
+        self.fd[22,zp   ,ym   ,xm   ] = self.fd[21,so[0],so[1],so[2]]
+
+        self.fd[23,zp   ,ym   ,xp   ] = self.fd[24,so[0],so[1],so[2]]
+        self.fd[24,zm   ,yp   ,xm   ] = self.fd[23,so[0],so[1],so[2]]
+        self.fd[25,zm   ,ym   ,xp   ] = self.fd[26,so[0],so[1],so[2]]
+        self.fd[26,zp   ,yp   ,xm   ] = self.fd[25,so[0],so[1],so[2]]
+        #Collision: Skip 3 cube faces
+        self.fd[27,so[0],so[1],x3p   ] = self.fd[28,so[0],so[1],so[2]]
+        self.fd[28,so[0],so[1],x3m   ] = self.fd[27,so[0],so[1],so[2]]
+        self.fd[29,so[0],y3p   ,so[2]] = self.fd[30,so[0],so[1],so[2]]
+        self.fd[30,so[0],y3m   ,so[2]] = self.fd[29,so[0],so[1],so[2]]
+        self.fd[31,z3p   ,so[1],so[2]] = self.fd[32,so[0],so[1],so[2]]
+        self.fd[32,z3m   ,so[1],so[2]] = self.fd[31,so[0],so[1],so[2]]
+        #Collision: Skip 3 cube vertices
+        self.fd[33,z3p   ,y3p   ,x3p   ] = self.fd[34,so[0],so[1],so[2]]
+        self.fd[34,z3m   ,y3m   ,x3m   ] = self.fd[33,so[0],so[1],so[2]]
+        self.fd[35,z3m   ,y3p   ,x3p   ] = self.fd[36,so[0],so[1],so[2]]
+        self.fd[36,z3p   ,y3m   ,x3m   ] = self.fd[35,so[0],so[1],so[2]]
+
+        self.fd[37,z3p   ,y3m   ,x3p   ] = self.fd[38,so[0],so[1],so[2]]
+        self.fd[38,z3m   ,y3p   ,x3m   ] = self.fd[37,so[0],so[1],so[2]]
+        self.fd[39,z3m   ,y3m   ,x3p   ] = self.fd[40,so[0],so[1],so[2]]
+        self.fd[40,z3p   ,y3p   ,x3m   ] = self.fd[39,so[0],so[1],so[2]]
 
         #clean solid
         self.fd[:,so[0],so[1],so[2]]=0
