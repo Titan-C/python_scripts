@@ -23,7 +23,7 @@ class lattice:
                         [3,3,3],[3,3,-3],[3,-3,3],[-3,3,3],
                         [-3,3,-3],[-3,-3,3],[3,-3,-3],[-3,-3,-3] ])
         self.g = array([eye(3)]*self.Nz*self.Ny*self.Nx).reshape(self.Nz,self.Ny,self.Nx,3,3)
-        w0=[2.*(5045-1507*sqrt(19))/2025.]
+        w0=[2.*(5045-1507*sqrt(10))/2025.]
         w1_6=6*[37./5/sqrt(10)-91./40.]
         w7_18=12*[(55-17*sqrt(10))/50.]
         w19_26=8*[(233*sqrt(10)-730)/1600.]
@@ -39,8 +39,9 @@ class lattice:
         self.gii=trace(self.g,axis1=3,axis2=4)
         self.cs2=1-sqrt(2./5.)
         self.fd  = self.eqdistributions()
+        
         self.tau = tau
-        self.nu  = (tau-0.5)/3.
+        self.nu  = (tau-0.5)*self.cs2
 
     def eqdistributions(self):
         """Evaluate Equilibrium distribution functions"""
@@ -49,9 +50,10 @@ class lattice:
         u2=sum(self.U**2,axis=3)
         uge=sum(self.U*self.ge,axis=4)
 
-        f =self.f*(5./2.+2*eu/cs2+0.5*self.ege/cs2-0.5*self.e2+0.5*(eu/cs2)**2-0.5*self.gii-0.5*u2/cs2
-        +(eu/cs2)**3/6.-0.5*eu*u2/cs2**2+0.5*eu*(self.ege-self.e2)/cs2**2
-        -0.5*eu*(self.gii-3)/cs2-uge/cs2)
+        f =self.f*(5./2. + 2*eu/cs2 + 0.5*self.ege/cs2 - 0.5*self.e2/cs2
+        + 0.5*(eu/cs2)**2 - 0.5*self.gii - 0.5*u2/cs2 + (eu/cs2)**3/6.
+        - 0.5*eu*u2/cs2**2 + 0.5*eu*(self.ege-self.e2)/cs2**2
+        - 0.5*eu*(self.gii-3)/cs2 - uge/cs2)
 
         return f
 
@@ -77,21 +79,49 @@ class lattice:
         self.fd[4] = roll(self.fd[4],-1,axis=1)  #y ^
         self.fd[5] = roll(self.fd[5], 1,axis=0)  #z /^
         self.fd[6] = roll(self.fd[6],-1,axis=0)  #z v/
-        
+
         self.fd[7] = roll( roll(self.fd[7], 1,axis=2) , 1,axis=1) #x >,y v
         self.fd[8] = roll( roll(self.fd[8],-1,axis=2) ,-1,axis=1) #x <,y ^
         self.fd[9] = roll( roll(self.fd[9], 1,axis=2) ,-1,axis=1) #x >,y ^
         self.fd[10]= roll( roll(self.fd[10],-1,axis=2), 1,axis=1) #x <,y v
-        
+
         self.fd[11] = roll( roll(self.fd[11], 1,axis=2) , 1,axis=0) #x >,z /^
         self.fd[12] = roll( roll(self.fd[12],-1,axis=2) ,-1,axis=0) #x <,z v/
         self.fd[13] = roll( roll(self.fd[13], 1,axis=2) ,-1,axis=0) #x >,z v/
         self.fd[14] = roll( roll(self.fd[14],-1,axis=2) , 1,axis=0) #x <,z /^
-        
+
         self.fd[15] = roll( roll(self.fd[15], 1,axis=1) , 1,axis=0) #y v,z /^
         self.fd[16] = roll( roll(self.fd[16],-1,axis=1) ,-1,axis=0) #y ^,z v/
         self.fd[17] = roll( roll(self.fd[17], 1,axis=1) ,-1,axis=0) #y v,z v/
         self.fd[18] = roll( roll(self.fd[18],-1,axis=1) , 1,axis=0) #y ^,z /^
+
+        self.fd[19] = roll( roll( roll(self.fd[19], 1,axis=2) , 1,axis=1) , 1,axis=0) #x >,y v,z /^
+        self.fd[20] = roll( roll( roll(self.fd[20], 1,axis=2) , 1,axis=1) ,-1,axis=0) #x >,y v,z v/
+        self.fd[21] = roll( roll( roll(self.fd[21], 1,axis=2) ,-1,axis=1) , 1,axis=0) #x >,y ^,z /^
+        self.fd[22] = roll( roll( roll(self.fd[22],-1,axis=2) , 1,axis=1) , 1,axis=0) #x <,y v,z /^
+
+        self.fd[23] = roll( roll( roll(self.fd[23],-1,axis=2) , 1,axis=1) ,-1,axis=0) #x <,y v,z v/
+        self.fd[24] = roll( roll( roll(self.fd[24],-1,axis=2) ,-1,axis=1) , 1,axis=0) #x <,y ^,z /^
+        self.fd[25] = roll( roll( roll(self.fd[25], 1,axis=2) ,-1,axis=1) ,-1,axis=0) #x >,y ^,z v/
+        self.fd[26] = roll( roll( roll(self.fd[26],-1,axis=2) ,-1,axis=1) ,-1,axis=0) #x <,y ^,z v/
+
+        self.fd[27] = roll(self.fd[27], 3,axis=2)  #3x >
+        self.fd[28] = roll(self.fd[28],-3,axis=2)  #3x <
+        self.fd[29] = roll(self.fd[29], 3,axis=1)  #3y v
+        self.fd[30] = roll(self.fd[30],-3,axis=1)  #3y ^
+        self.fd[31] = roll(self.fd[31], 3,axis=0)  #3z /^
+        self.fd[32] = roll(self.fd[32],-3,axis=0)  #3z v/
+
+        self.fd[33] = roll( roll( roll(self.fd[33], 3,axis=2) , 3,axis=1) , 3,axis=0) #3x >,3y v,3z /^
+        self.fd[34] = roll( roll( roll(self.fd[34], 3,axis=2) , 3,axis=1) ,-3,axis=0) #3x >,3y v,3z v/
+        self.fd[35] = roll( roll( roll(self.fd[35], 3,axis=2) ,-3,axis=1) , 3,axis=0) #3x >,3y ^,3z /^
+        self.fd[36] = roll( roll( roll(self.fd[36],-3,axis=2) , 3,axis=1) , 3,axis=0) #3x <,3y v,3z /^
+
+        self.fd[37] = roll( roll( roll(self.fd[37],-3,axis=2) , 3,axis=1) ,-3,axis=0) #3x <,3y v,3z v/
+        self.fd[38] = roll( roll( roll(self.fd[38],-3,axis=2) ,-3,axis=1) , 3,axis=0) #3x <,3y ^,3z /^
+        self.fd[39] = roll( roll( roll(self.fd[39], 3,axis=2) ,-3,axis=1) ,-3,axis=0) #3x >,3y ^,3z v/
+        self.fd[40] = roll( roll( roll(self.fd[40],-3,axis=2) ,-3,axis=1) ,-3,axis=0) #3x <,3y ^,3z v/
+
 
     def collision(self):
         """Modify distribution funtions according to collision term"""
