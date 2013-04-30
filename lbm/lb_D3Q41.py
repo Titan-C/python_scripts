@@ -178,7 +178,7 @@ class lattice:
         z3p[z3p==Nz+2]=2
         zm=so[0]-1
         zm[zm==-1]+=Nz
-        z3m=so[0]-1
+        z3m=so[0]-3
         z3m[z3m==-1]+=Nz
         z3m[z3m==-2]+=Nz
         z3m[z3m==-3]+=Nz
