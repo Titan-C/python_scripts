@@ -17,6 +17,17 @@ tau =0.65
 r=1
 F=np.array([1e-6,0,0])
 
+def test_Macro():
+    """Test if Macroscopic variables can be generated from distributions functions"""
+    U=[0.05,0.05,0.05]
+    lat = lb.lattice(size,U,tau)
+    lat.updateMacroVariables()
+
+    print np.abs(lat.U-U), np.abs(lat.rho-r)
+    U=np.array(U)
+    assert ( np.abs(lat.U-U) < 1.2e-16 ).all()
+    assert ( np.abs(lat.rho-r) < 3e-17 ).all()
+
 def test_consPBC():
     """Test if on periodic boundary conditions density and fluid velocity are conserved"""
     U=[0.05,0.05,0.05]
@@ -39,7 +50,6 @@ def test_consArbiWalls():
     wall=np.zeros(size)
     wall[[0,1,-2,-1]]=1
     lat.setWalls(wall)
-#    import pdb; pdb.set_trace()
     for step in range(300):
        lat.updateMacroVariables()
        lat.collision()
