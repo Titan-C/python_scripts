@@ -32,7 +32,7 @@ class lattice:
         self.w=array(w0+w1_6+w7_18+w19_26+w27_32+w33_40)
         self.rho = r*ones(LatticeSize)
         
-        self.f=self.w.reshape(41,1,1,1)*self.rho
+        self.wp=self.w.reshape(41,1,1,1)*self.rho
         self.ge=tensordot(self.E,self.g,axes=(1,4))
         self.ege=sum(self.E.reshape(41,1,1,1,3)*self.ge,axis=4)
         self.e2=sum(self.E**2,axis=1).reshape(41,1,1,1)
@@ -50,10 +50,10 @@ class lattice:
         u2=sum(self.U**2,axis=3)
         uge=sum(self.U*self.ge,axis=4)
 
-        f =self.f*(5./2. + 2*eu/cs2 + 0.5*self.ege/cs2 - 0.5*self.e2/cs2
-        + 0.5*(eu/cs2)**2 - 0.5*self.gii - 0.5*u2/cs2 + (eu/cs2)**3/6.
-        - 0.5*eu*u2/cs2**2 + 0.5*eu*(self.ege-self.e2)/cs2**2
-        - 0.5*eu*(self.gii-3)/cs2 - uge/cs2)
+        f =self.wp*(5./2.*cs2 + 2*eu + 0.5*self.ege - 0.5*self.e2
+        + 0.5*eu**2/cs2 - 0.5*self.gii*cs2 - 0.5*u2 + eu**3/cs2**2/6.
+        - 0.5*eu*u2/cs2 + 0.5*eu*(self.ege-self.e2)/cs2
+        - 0.5*eu*(self.gii-3) - uge)/cs2
 
         return f
 
@@ -129,10 +129,21 @@ class lattice:
         feq = self.eqdistributions()
         self.fd -=  1.0/self.tau*(self.fd - feq)
 
-    def force(self,F):
+    def force(self,Fext):
         """Adds microscopic forcing term"""
-        cf = (1-0.5/self.tau)*3.0*self.w.reshape(19,1,1,1)
-        self.fd+= cf*( dot(self.E.reshape(19,1,1,1,3)-self.U, F) + 3 * tensordot(self.E,self.U,axes=(1,3)) * dot(self.E,F).reshape(19,1,1,1))
+
+        F=Fext.reshape(1,1,1,1,3)
+        cs2=self.cs2
+        eF=sum(self.E.reshape(41,1,1,1,3)*F,axis=4)
+        eu=tensordot(self.E,self.U,axes=(1,3))
+        uF=sum(self.U*F,axis=4)
+        geF=sum(self.ge*F,axis=4)
+        u2=sum(self.U**2,axis=4)
+
+        self.fd+= self.wp*( 3.5*eF + eu*eF/cs2 - uF
+            + 0.5*self.ege*eF/cs2 - geF - 0.5*self.gii*eF
+            - 0.5*self.e2*eF/cs2
+            + 0.5*eu*eu*eF/cs2**2 - eu*eF/cs2 - 0.5*u2*eF/cs2)/cs2
 
 ##boundaries handling
     def setWalls(self,walls):
