@@ -66,7 +66,7 @@ class lattice:
         self.rho[self.rho<1e-13]=1
         self.U = tensordot(self.fd,self.E,axes=(0,0))/self.rho.reshape(self.Nz,self.Ny,self.Nx,1)
         #Additional forcing
-        self.U += 0.5*F/self.rho.reshape(self.Nz,self.Ny,self.Nx,1)
+#        self.U += 0.5*F/self.rho.reshape(self.Nz,self.Ny,self.Nx,1)
 
 #LBM steps
     def streamming(self):
@@ -138,7 +138,7 @@ class lattice:
         eu=tensordot(self.E,self.U,axes=(1,3))
         uF=sum(self.U*F,axis=4)
         geF=sum(self.ge*F,axis=4)
-        u2=sum(self.U**2,axis=4)
+        u2=sum(self.U**2,axis=3)
 
         self.fd+= self.wp*( 3.5*eF + eu*eF/cs2 - uF
             + 0.5*self.ege*eF/cs2 - geF - 0.5*self.gii*eF
