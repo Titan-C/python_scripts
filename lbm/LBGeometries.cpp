@@ -105,11 +105,11 @@ double densidad(int i, int j, int k){
 }
 double Voxi(int i, int j, int k){
     
-    return (0.005);
+    return (0);
 }
 double Voyi(int i, int j, int k){
     
-    return (0);
+    return (0.005);
 }
 double Vozi(int i, int j, int k){
     
@@ -144,18 +144,16 @@ bool Cplasma::test_macro(){
   vin[1]=Voyi(0,0,0);
   vin[2]=Vozi(0,0,0);
   double diff;
-  bool r=true;
   for(int i=0;i<Lx;i++){
     for(int j=0;j<Ly;j++){
       for(int k=0;k<Lz;k++){
 	for(int m=0;m<3;m++){
-	  diff=abs(Vm[i][j][k][m]-vin[m]);
+	  diff=fabs(Vm[i][j][k][m]-vin[m]);
 	if (diff>5e-14){
 	  cout<<diff;
-	  r=false;
-	  break;
+	  return false;
 	}}}}}
-  return r;
+  return true;
 }
 
   
@@ -653,11 +651,11 @@ int main(){
     cout<<"sucess";
   else
     cout<<"fail";
-  do{
+//   do{
     
     //	cout << "Introduzca tiempo de parada:";
-    cin >> tmax;
-    
+//     cin >> tmax;
+    tmax=5000;
     for(t=tmaxold;t<tmax;t++){
       plasma.Evolucion(t);
       //      cout << t+1 << "\t" << endl;
@@ -699,7 +697,7 @@ int main(){
     
     tmaxold=tmax;
     
-  }while(1);
+//   }while(1);
   
   return 0;
 }

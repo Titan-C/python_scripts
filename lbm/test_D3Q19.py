@@ -17,6 +17,18 @@ tau =0.503
 r=1
 F=np.array([1e-6,0,0])
 
+def test_Macro():
+    """Test if Macroscopic variables can be generated from distributions functions"""
+    U=[0.05,0.05,0.05]
+    lat = lb_D3Q19.lattice(size,U,tau)
+    lat.updateMacroVariables()
+
+    print 'rho_err= ',np.max(np.abs(lat.rho-r))
+    print 'U_err0= ',np.max(np.abs(lat.U-U))
+    U=np.array(U)
+    assert ( np.abs(lat.rho-r) < 5e-15 ).all()
+    assert ( np.abs(lat.U-U) < 5e-15 ).all()
+    
 def test_consPBC():
     """Test if on periodic boundary conditions density and fluid velocity are conserved"""
     U=[0.1,0.1,0.1]

@@ -6,13 +6,14 @@ Created on Tue Apr 23 13:45:43 2013
 Lattice Boltzmann 3D en D3Q19 class
 """
 from numpy import array, sum, ones,zeros, roll, where,tensordot,dot,sqrt,eye,trace,diag
+from numpy.linalg import inv
 
 class lattice:
-    def __init__(self,LatticeSize,U,tau,r=1):
+    def __init__(self,LatticeSize,U,tau,d=[1.,1.,1.],r=1):
         """Unitiate dicrete distribution functions for a given LatticeSize
            and velocity"""
         self.Nz,self.Ny,self.Nx=LatticeSize
-        self.U = array(U*self.Nz*self.Ny*self.Nx).reshape(self.Nz,self.Ny,self.Nx,3)
+        self.U = array([U[0],U[1],U[2]]*self.Nz*self.Ny*self.Nx).reshape(self.Nz,self.Ny,self.Nx,3)
         self.E = array([[0,0,0],[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1],
                         [1,1,0],[-1,-1,0],[1,-1,0],[-1,1,0],
                         [1,0,1],[-1,0,-1],[1,0,-1],[-1,0,1],
@@ -21,8 +22,9 @@ class lattice:
                         [1,-1,1],[-1,1,-1],[1,-1,-1],[-1,1,1],
                         [3,0,0],[-3,0,0],[0,3,0],[0,-3,0],[0,0,3],[0,0,-3],
                         [3,3,3],[-3,-3,-3],[3,3,-3],[-3,-3,3],
-                        [3,-3,3],[-3,3,-3],[3,-3,-3],[-3,3,3] ])
-        self.g = array([diag([1,1,1])]*self.Nz*self.Ny*self.Nx).reshape(self.Nz,self.Ny,self.Nx,3,3)
+                        [3,-3,3],[-3,3,-3],[3,-3,-3],[-3,3,3] ],dtype=float)
+        metric=[inv(diag(d))]
+        self.g = array([metric]*self.Nz*self.Ny*self.Nx).reshape(self.Nz,self.Ny,self.Nx,3,3)
         w0=[2.*(5045-1507*sqrt(10))/2025.]
         w1_6=6*[37./5/sqrt(10)-91./40.]
         w7_18=12*[(55-17*sqrt(10))/50.]
@@ -49,6 +51,7 @@ class lattice:
         eu=tensordot(self.E,self.U,axes=(1,3))
         u2=sum(self.U**2,axis=3)
         uge=sum(self.U*self.ge,axis=4)
+#        import pdb;pdb.set_trace()
 
         f =self.wp*(5./2.*cs2 + 2*eu + 0.5*self.ege - 0.5*self.e2
         + 0.5*eu**2/cs2 - 0.5*self.gii*cs2 - 0.5*u2 + eu**3/cs2**2/6.
@@ -158,41 +161,29 @@ class lattice:
         xp=so[2]+1
         xp[xp==Nx]=0
         x3p=so[2]+3
-        x3p[x3p==Nx]  =0
-        x3p[x3p==Nx+1]=1
-        x3p[x3p==Nx+2]=2
+        x3p[x3p>=Nx]-=Nx
         xm=so[2]-1
         xm[xm==-1]+=Nx
         x3m=so[2]-3
-        x3m[x3m==-1]+=Nx
-        x3m[x3m==-2]+=Nx
-        x3m[x3m==-3]+=Nx
+        x3m[x3m<0]+=Nx
         
         yp=so[1]+1
         yp[yp==Ny]=0
         y3p=so[1]+3
-        y3p[y3p==Ny]  =0
-        y3p[y3p==Ny+1]=1
-        y3p[y3p==Ny+2]=2
+        y3p[y3p>=Ny]-=Ny
         ym=so[1]-1
         ym[ym==-1]+=Ny
         y3m=so[1]-3
-        y3m[y3m==-1]+=Ny
-        y3m[y3m==-2]+=Ny
-        y3m[y3m==-3]+=Ny
+        y3m[y3m<0]+=Ny
         
         zp=so[0]+1
         zp[zp==Nz]=0
         z3p=so[0]+3
-        z3p[z3p==Nz]  =0
-        z3p[z3p==Nz+1]=1
-        z3p[z3p==Nz+2]=2
+        z3p[z3p>=Nz]-=Nz
         zm=so[0]-1
         zm[zm==-1]+=Nz
         z3m=so[0]-3
-        z3m[z3m==-1]+=Nz
-        z3m[z3m==-2]+=Nz
-        z3m[z3m==-3]+=Nz
+        z3m[z3m<0]+=Nz
 
         #Collisions: Mayor Axis
         self.fd[1,so[0],so[1],xp   ] = self.fd[2,so[0],so[1],so[2]]
